@@ -481,8 +481,9 @@ async def fetch_transcript_via_innertube(video_id: str) -> Tuple[List[Dict[str, 
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
         "Accept-Language": "en-US,en;q=0.9",
     }
+    proxy_url = clean_api_key(os.getenv("YOUTUBE_PROXY_URL") or os.getenv("PROXY_URL")) or None
 
-    async with httpx.AsyncClient(timeout=20.0, follow_redirects=True, headers=headers) as client:
+    async with httpx.AsyncClient(timeout=20.0, follow_redirects=True, headers=headers, proxy=proxy_url) as client:
         innertube_key = None
         try:
             watch_resp = await client.get(
@@ -916,6 +917,7 @@ async def call_llm_json(
     provider: str,
     api_key: Optional[str],
     model: Optional[str] = None,
+    youtube_url_for_native_ingest: Optional[str] = None,
 ) -> Tuple[Optional[Dict[str, Any]], str]:
     api_key = clean_api_key(api_key)
     if not api_key:
@@ -976,14 +978,36 @@ async def call_llm_json(
                         if use_json_mime:
                             gen_cfg["responseMimeType"] = "application/json"
 
+                        # If transcript scraping was blocked on Vercel/AWS IP, first try passing the YouTube URL
+                        # directly via `fileData.fileUri` so Google's own servers ingest the YouTube video!
+                        parts_list: List[Dict[str, Any]] = []
+                        if youtube_url_for_native_ingest and use_json_mime:
+                            parts_list.append({
+                                "fileData": {
+                                    "mimeType": "video/mp4",
+                                    "fileUri": youtube_url_for_native_ingest,
+                                }
+                            })
+                        parts_list.append({"text": prompt})
+
                         resp = await client.post(
                             url,
                             params={"key": api_key},
                             json={
-                                "contents": [{"parts": [{"text": prompt}]}],
+                                "contents": [{"parts": parts_list}],
                                 "generationConfig": gen_cfg,
                             },
                         )
+                        # If native YouTube fileUri isn't supported for this video length/model, immediately retry text-only
+                        if resp.status_code != 200 and youtube_url_for_native_ingest and len(parts_list) > 1:
+                            resp = await client.post(
+                                url,
+                                params={"key": api_key},
+                                json={
+                                    "contents": [{"parts": [{"text": prompt}]}],
+                                    "generationConfig": gen_cfg,
+                                },
+                            )
                         if resp.status_code == 200:
                             candidates = resp.json().get("candidates", [])
                             if candidates:
@@ -1364,6 +1388,7 @@ Return ONLY valid JSON matching this exact schema:
         provider=provider,
         api_key=llm_api_key,
         model=llm_model,
+        youtube_url_for_native_ingest=(video.get("url") if not transcript_items else None),
     )
 
     if not llm_res or not isinstance(llm_res, dict) or not llm_res.get("executive_summary"):
