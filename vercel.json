@@ -1,0 +1,23 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "backend_server.py",
+      "use": "@vercel/python"
+    },
+    {
+      "src": "youtube_summarizer_webapp.html",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "backend_server.py"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/youtube_summarizer_webapp.html"
+    }
+  ]
+}

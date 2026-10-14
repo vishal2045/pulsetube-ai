@@ -1,0 +1,2698 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PulseTube AI v3.0 — Full-Playlist & Lecture Exam/Interview Summarizer</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            slate: {
+              850: '#141c2b',
+              925: '#0b111e'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    .mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #475569;
+    }
+    @media print {
+      body {
+        background: #ffffff !important;
+        color: #0f172a !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+      .print-card {
+        background: #ffffff !important;
+        color: #0f172a !important;
+        border: 1px solid #cbd5e1 !important;
+        box-shadow: none !important;
+        break-inside: avoid;
+      }
+      .print-text-dark {
+        color: #0f172a !important;
+      }
+    }
+  </style>
+</head>
+<body class="bg-slate-925 text-slate-100 min-h-screen flex flex-col selection:bg-rose-500 selection:text-white">
+
+  <!-- Top Navigation Header -->
+  <header class="border-b border-slate-800/80 bg-slate-900/90 backdrop-blur sticky top-0 z-30 no-print">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-500 via-orange-500 to-amber-500 flex items-center justify-center shadow-lg shadow-rose-500/20">
+          <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="font-bold text-lg tracking-tight text-white">PulseTube AI</span>
+            <span class="text-[11px] font-semibold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">v4.0 • Dynamic Gemini ListModels + Code & Concept Engine</span>
+          </div>
+          <p class="text-xs text-slate-400 hidden sm:block">4-Layer Transcript Extractor • Full 42+ Video Playlists • On-Demand Lecture AI Notes • Exam & Interview Prep</p>
+        </div>
+      </div>
+
+      <!-- Backend Status & Settings -->
+      <div class="flex items-center gap-2.5">
+        <div id="backendStatusBadge" class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/90 border border-slate-700/80 text-xs">
+          <span id="backendDot" class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+          <span id="backendStatusText" class="text-slate-300">Checking Backend...</span>
+        </div>
+
+        <button onclick="openSettingsModal()" class="px-3.5 py-2 rounded-lg bg-rose-600/20 hover:bg-rose-600/30 border border-rose-500/40 text-xs font-semibold text-rose-200 flex items-center gap-2 transition">
+          <svg class="w-4 h-4 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+          </svg>
+          <span>API & Gemini Key Config</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Workspace Container -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+    <!-- URL Input, Mode Toggle & Study Goal Bar -->
+    <section class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-xl no-print">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-3.5 items-end">
+        <div class="lg:col-span-5">
+          <label for="youtubeUrlInput" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
+            YouTube Video or Course Playlist URL
+          </label>
+          <div class="relative flex items-center">
+            <input
+              id="youtubeUrlInput"
+              type="text"
+              placeholder="Paste any YouTube Video (watch?v=...) or Playlist (playlist?list=...) URL..."
+              class="w-full bg-slate-950 border border-slate-700/90 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 rounded-xl pl-4 pr-28 py-3 text-sm text-white placeholder-slate-500 outline-none transition"
+              value="https://www.youtube.com/playlist?list=PLoROMvodv4rMiGQp3WXShtMGgzqpfVfbU"
+            />
+            <span id="detectedTypePill" class="absolute right-2.5 px-2 py-1 rounded-md text-[10px] font-semibold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+              Playlist
+            </span>
+          </div>
+        </div>
+
+        <div class="lg:col-span-2">
+          <label for="urlModeSelect" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
+            URL Target Mode
+          </label>
+          <select id="urlModeSelect" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-3 text-xs sm:text-sm text-slate-200 focus:border-rose-500 outline-none">
+            <option value="auto" selected>Auto-Detect</option>
+            <option value="video">🎬 Single Video Only</option>
+            <option value="playlist">📚 Full Playlist (All Videos)</option>
+          </select>
+        </div>
+
+        <div class="lg:col-span-3">
+          <label for="studyGoalSelect" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
+            Study Goal / Persona
+          </label>
+          <select id="studyGoalSelect" onchange="applyStudyGoalView()" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-3 text-xs sm:text-sm text-slate-200 focus:border-rose-500 outline-none">
+            <option value="master" selected>🧠 Master Guide (Notes + Exam + Interview)</option>
+            <option value="exam">🎓 University Exam Revision</option>
+            <option value="interview">💼 Technical Interview Prep</option>
+          </select>
+        </div>
+
+        <div class="lg:col-span-2">
+          <button
+            id="analyzeBtn"
+            onclick="handleAnalyzeUrl()"
+            class="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-rose-600 to-orange-500 hover:from-rose-500 hover:to-orange-400 text-white font-semibold text-sm shadow-lg shadow-rose-600/25 flex items-center justify-center gap-2 transition cursor-pointer"
+          >
+            <svg id="analyzeSpinner" class="w-4 h-4 animate-spin hidden" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+            </svg>
+            <span id="analyzeBtnText">Summarize</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Sample Presets & Export Bar -->
+      <div class="mt-4 pt-3.5 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="text-slate-400 font-medium">Sample Lectures:</span>
+          <button onclick="loadDemoPreset('cs229_playlist')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition">
+            🎓 Stanford CS229 ML Playlist
+          </button>
+          <button onclick="loadDemoPreset('karpathy_video')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition">
+            💼 Andrej Karpathy — LLM Internals Video
+          </button>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button onclick="copyMarkdownToClipboard()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 flex items-center gap-1.5 transition">
+            <span>📋 Copy Study Guide (.MD)</span>
+          </button>
+          <button onclick="exportMarkdownFile()" class="px-3 py-1.5 rounded-lg bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/30 flex items-center gap-1.5 font-medium transition">
+            <span>⬇️ Download .MD</span>
+          </button>
+          <button onclick="exportPdfFile()" class="px-3 py-1.5 rounded-lg bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-500/30 flex items-center gap-1.5 font-medium transition">
+            <span>📄 Export Study PDF</span>
+          </button>
+        </div>
+      </div>
+
+      <div id="statusAlert" class="hidden mt-3 px-4 py-2.5 rounded-xl text-xs border"></div>
+    </section>
+
+    <!-- Lecture / Course Overview Card -->
+    <section class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl print-card">
+      <div class="flex flex-col lg:flex-row gap-6 items-start justify-between">
+        <div class="space-y-2 flex-1">
+          <div class="flex flex-wrap items-center gap-2">
+            <span id="headerKindBadge" class="px-2.5 py-0.5 rounded-md text-xs font-semibold bg-rose-500/20 text-rose-300 border border-rose-500/30">
+              DEEP LECTURE STUDY GUIDE
+            </span>
+            <span id="headerChannelBadge" class="text-xs font-medium text-slate-400"></span>
+            <span class="text-slate-600">•</span>
+            <a id="headerSourceLink" href="#" target="_blank" rel="noopener noreferrer" class="text-xs text-rose-400 hover:text-rose-300 underline font-medium">
+              Watch on YouTube ↗
+            </a>
+          </div>
+          <h1 id="headerTitle" class="text-xl sm:text-2xl font-bold text-white print-text-dark"></h1>
+          <p id="headerSubtitle" class="text-sm text-slate-300 leading-relaxed print-text-dark"></p>
+        </div>
+
+        <!-- KPIs -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full lg:w-auto shrink-0">
+          <div class="bg-slate-950/90 border border-slate-800 rounded-xl p-3.5 text-center print-card">
+            <div class="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">Total Videos</div>
+            <div id="kpiVideoCount" class="text-lg font-bold text-white mt-0.5 mono print-text-dark">3</div>
+          </div>
+          <div class="bg-slate-950/90 border border-slate-800 rounded-xl p-3.5 text-center print-card">
+            <div class="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">Full Watch Time</div>
+            <div id="kpiTotalDuration" class="text-lg font-bold text-rose-400 mt-0.5 mono">3h 47m</div>
+          </div>
+          <div class="bg-slate-950/90 border border-slate-800 rounded-xl p-3.5 text-center print-card">
+            <div class="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">At 1.5x Speed</div>
+            <div id="kpiSpeed15" class="text-lg font-bold text-emerald-400 mt-0.5 mono">2h 31m</div>
+          </div>
+          <div class="bg-slate-950/90 border border-slate-800 rounded-xl p-3.5 text-center print-card">
+            <div class="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">Study Guide Read</div>
+            <div id="kpiReadTime" class="text-lg font-bold text-amber-400 mt-0.5 mono">6m 30s</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Playlist Lecture Switcher & On-Demand AI Summarizer Bar (Supports 42+ Videos!) -->
+      <div id="globalLectureBar" class="mt-5 pt-4 border-t border-slate-800/90 space-y-3 no-print">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-300">Playlist Lectures (<span id="playlistTotalCountLabel">0</span> Total):</span>
+            <span class="text-[11px] text-slate-400">Click any lecture (#1 to #N) to view or auto-summarize its full transcript</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <button
+              id="btnSummarizeActiveLecture"
+              onclick="summarizeSpecificVideoOnDemand(activeVideoIndex, true)"
+              class="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold flex items-center gap-1.5 shadow transition cursor-pointer"
+            >
+              <span>✨ Deep AI Summarize Current Lecture</span>
+            </button>
+            <button
+              id="btnBatchSummarizeNext"
+              onclick="batchSummarizeNextLectures(3)"
+              class="px-3 py-1.5 rounded-lg bg-indigo-600/25 hover:bg-indigo-600/40 text-indigo-200 border border-indigo-500/40 text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
+            >
+              <span>⚡ Batch Summarize Next 3 Lectures</span>
+            </button>
+          </div>
+        </div>
+        <div id="globalLectureButtons" class="flex items-center gap-2 overflow-x-auto pb-2 pt-0.5"></div>
+      </div>
+    </section>
+
+    <!-- Main Navigation Tabs -->
+    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3 no-print">
+      <div class="flex flex-wrap gap-2">
+        <button id="tabBtnNotes" onclick="switchMainTab('notes')" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-rose-600 text-white shadow transition">
+          📚 Deep Lecture Notes (What's Taught)
+        </button>
+        <button id="tabBtnExam" onclick="switchMainTab('exam')" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 transition">
+          🎓 Exam Revision & Model Q&A
+        </button>
+        <button id="tabBtnInterview" onclick="switchMainTab('interview')" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 transition">
+          💼 Interview Prep & Flashcards
+        </button>
+        <button id="tabBtnChapters" onclick="switchMainTab('chapters')" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 transition">
+          ⏱️ Video Chapters & Player
+        </button>
+        <button id="tabBtnRollup" onclick="switchMainTab('rollup')" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 transition">
+          🗂️ All Playlist Videos & Course Rollup
+        </button>
+        <button id="tabBtnCalculator" onclick="switchMainTab('calculator')" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 transition">
+          🧮 Duration Calculator
+        </button>
+      </div>
+    </div>
+
+    <!-- On-Demand Summarization Loading Overlay Card -->
+    <div id="onDemandLoadingBanner" class="hidden bg-indigo-950/80 border border-indigo-500/40 rounded-2xl p-5 flex items-center justify-between gap-4 no-print">
+      <div class="flex items-center gap-3">
+        <svg class="w-5 h-5 text-indigo-400 animate-spin shrink-0" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+        </svg>
+        <div>
+          <div id="onDemandLoadingTitle" class="text-sm font-bold text-white">Extracting Spoken Transcript & Generating AI Lecture Notes...</div>
+          <div class="text-xs text-indigo-200">Fetching captions via YouTube Innertube API and synthesizing concepts, formulas, exam Q&As, and interview flashcards</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- TAB 1: DEEP LECTURE NOTES (WHAT IS TAUGHT INSIDE THE VIDEO)         -->
+    <!-- =================================================================== -->
+    <section id="tabPanelNotes" class="space-y-6">
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 space-y-3 print-card">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div class="flex flex-wrap items-center gap-2">
+            <span id="notesVideoBadge" class="px-2.5 py-1 rounded-md text-xs font-semibold bg-rose-500/20 text-rose-300 border border-rose-500/30">
+              Lecture #1 Study Notes
+            </span>
+            <span id="notesAiModelBadge" class="px-2.5 py-1 rounded-md text-xs font-semibold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+              AI Study Guide
+            </span>
+          </div>
+          <span id="notesTranscriptStatus" class="text-xs text-emerald-400 mono bg-emerald-500/10 px-2.5 py-1 rounded-md border border-emerald-500/20">
+            ✓ Spoken Transcript Analyzed
+          </span>
+        </div>
+        <h2 id="notesVideoTitle" class="text-lg sm:text-xl font-bold text-white print-text-dark"></h2>
+        <p id="notesExecSummary" class="text-sm text-slate-200 leading-relaxed print-text-dark"></p>
+
+        <!-- Key Takeaways List right inside Executive Summary Card -->
+        <div class="pt-3 border-t border-slate-800/80">
+          <h3 class="text-xs font-semibold uppercase tracking-wider text-rose-400 mb-2">Key Lecture Takeaways</h3>
+          <ul id="notesKeyTakeawaysList" class="space-y-1.5 text-xs sm:text-sm text-slate-200 print-text-dark"></ul>
+        </div>
+      </div>
+
+      <!-- 1. Core Concepts & Theory Taught Step-by-Step -->
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 space-y-4 print-card">
+        <div>
+          <h3 class="text-base font-bold text-white flex items-center gap-2 print-text-dark">
+            <span class="w-2 h-5 rounded-full bg-rose-500"></span>
+            <span>Core Concepts, Theory & Mechanisms Taught in This Video</span>
+          </h3>
+          <p class="text-xs text-slate-400 mt-0.5">Step-by-step teaching breakdown of what the instructor explains inside the video</p>
+        </div>
+        <div id="notesCoreConceptsList" class="space-y-4"></div>
+      </div>
+
+      <!-- 2. Formulas, Equations, Algorithms & Complexity + 3. Worked Examples -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 space-y-4 print-card">
+          <h3 class="text-base font-bold text-white flex items-center gap-2 print-text-dark">
+            <span class="w-2 h-5 rounded-full bg-amber-400"></span>
+            <span>Formulas, Equations, Algorithms & Complexity</span>
+          </h3>
+          <div id="notesFormulasList" class="space-y-3.5"></div>
+        </div>
+
+        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 space-y-4 print-card">
+          <h3 class="text-base font-bold text-white flex items-center gap-2 print-text-dark">
+            <span class="w-2 h-5 rounded-full bg-emerald-400"></span>
+            <span>Worked Examples & Real-World Walkthroughs</span>
+          </h3>
+          <div id="notesExamplesList" class="space-y-3.5"></div>
+        </div>
+      </div>
+
+      <!-- 4. Concept Comparison & Trade-Off Table -->
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 space-y-4 print-card">
+        <h3 class="text-base font-bold text-white flex items-center gap-2 print-text-dark">
+          <span class="w-2 h-5 rounded-full bg-indigo-400"></span>
+          <span>Concept Comparison & Trade-Off Matrix (High-Yield for Exams & Interviews)</span>
+        </h3>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs sm:text-sm">
+            <thead>
+              <tr class="border-b border-slate-800 text-slate-400 uppercase text-[11px] tracking-wider">
+                <th class="py-3 px-4">Dimension / Aspect</th>
+                <th class="py-3 px-4">Method / Concept A</th>
+                <th class="py-3 px-4">Method / Concept B</th>
+                <th class="py-3 px-4">Exam / Production Verdict</th>
+              </tr>
+            </thead>
+            <tbody id="notesComparisonTableBody" class="divide-y divide-slate-800/70"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- TAB 2: UNIVERSITY EXAM REVISION & MODEL Q&A                         -->
+    <!-- =================================================================== -->
+    <section id="tabPanelExam" class="hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div class="lg:col-span-7 bg-slate-900/90 border border-slate-800 rounded-2xl p-6 space-y-4 print-card">
+          <div class="flex items-center justify-between">
+            <h3 class="text-base font-bold text-white flex items-center gap-2 print-text-dark">
+              <span>🎓 High-Yield Exam Cheat Sheet (Must-Memorize Points)</span>
+            </h3>
+            <span class="px-2.5 py-0.5 rounded text-xs font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30">Last-Minute Revision</span>
+          </div>
+          <ul id="examCheatSheetList" class="space-y-3 text-sm text-slate-200 print-text-dark"></ul>
+        </div>
+
+        <div class="lg:col-span-5 bg-slate-900/90 border border-rose-500/30 rounded-2xl p-6 space-y-4 print-card">
+          <h3 class="text-base font-bold text-rose-300 flex items-center gap-2 print-text-dark">
+            <span>⚠️ Common Exam Traps & Student Mistakes to Avoid</span>
+          </h3>
+          <ul id="examTrapsList" class="space-y-3 text-sm text-slate-200 print-text-dark"></ul>
+        </div>
+      </div>
+
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 space-y-4 print-card">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h3 class="text-base font-bold text-white print-text-dark">Likely University Exam Questions & Full-Credit Model Answers</h3>
+            <p class="text-xs text-slate-400">Test yourself first, then click any question to toggle the step-by-step model answer</p>
+          </div>
+          <button onclick="toggleAllExamAnswers(true)" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-200 border border-slate-700 no-print">
+            Reveal All Model Answers
+          </button>
+        </div>
+        <div id="examQuestionsContainer" class="space-y-4"></div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- TAB 3: TECHNICAL INTERVIEW PREP & ACTIVE-RECALL FLASHCARDS          -->
+    <!-- =================================================================== -->
+    <section id="tabPanelInterview" class="hidden space-y-6">
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 space-y-4 print-card">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h3 class="text-base font-bold text-white flex items-center gap-2 print-text-dark">
+              <span>💼 High-Probability Interview Questions & Structured Answers</span>
+            </h3>
+            <p class="text-xs text-slate-400">Each question gives you a crisp 30-second opening pitch, deep technical internals, and follow-up trade-offs</p>
+          </div>
+          <span class="px-2.5 py-1 rounded text-xs font-semibold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">STAR + System Trade-Offs</span>
+        </div>
+        <div id="interviewQuestionsContainer" class="space-y-4"></div>
+      </div>
+
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 space-y-4 print-card">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h3 class="text-base font-bold text-white print-text-dark">🧠 Interactive Active-Recall Flashcards</h3>
+            <p class="text-xs text-slate-400">Click any card to flip between the question and answer</p>
+          </div>
+          <div id="flashcardProgressBadge" class="text-xs font-semibold text-emerald-400 mono bg-emerald-500/10 px-3 py-1 rounded-lg border border-emerald-500/20">
+            Click cards to flip & master
+          </div>
+        </div>
+        <div id="flashcardsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- TAB 4: VIDEO CHAPTERS, EMBEDDED PLAYER & SPOKEN TRANSCRIPT          -->
+    <!-- =================================================================== -->
+    <section id="tabPanelChapters" class="hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div class="lg:col-span-5 space-y-5">
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl no-print">
+            <div class="aspect-video bg-black relative">
+              <iframe
+                id="youtubePlayerIframe"
+                class="w-full h-full"
+                src="https://www.youtube.com/embed/jGwO_UgTS7I?rel=0"
+                title="YouTube video player"
+                frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen
+              ></iframe>
+            </div>
+            <div class="p-4 flex items-center justify-between gap-2 bg-slate-900/95 border-t border-slate-800">
+              <div class="truncate">
+                <div id="activePlayerVideoTitle" class="text-sm font-semibold text-white truncate"></div>
+                <div id="activePlayerMeta" class="text-xs text-slate-400"></div>
+              </div>
+              <a id="activePlayerExternalLink" href="#" target="_blank" rel="noopener noreferrer" class="shrink-0 px-3 py-1.5 rounded-lg bg-rose-500/15 text-rose-300 hover:bg-rose-500/25 border border-rose-500/30 text-xs font-medium">
+                YouTube ↗
+              </a>
+            </div>
+          </div>
+
+          <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 space-y-3 no-print">
+            <div class="flex items-center justify-between">
+              <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-400">All Lectures in Playlist</h3>
+              <span id="selectorCountBadge" class="text-xs text-slate-400 mono"></span>
+            </div>
+            <div id="videoSelectorList" class="space-y-2 max-h-[420px] overflow-y-auto pr-1"></div>
+          </div>
+        </div>
+
+        <div class="lg:col-span-7 space-y-5">
+          <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 space-y-4 print-card">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h3 class="text-base font-bold text-white print-text-dark">Timestamped Chapter Teaching Breakdowns</h3>
+                <p class="text-xs text-slate-400">Detailed chapter explanations of what is taught at each timestamp</p>
+              </div>
+              <input
+                id="chapterSearchInput"
+                type="text"
+                oninput="filterChapters()"
+                placeholder="Search chapter concepts..."
+                class="bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:border-rose-500 outline-none no-print"
+              />
+            </div>
+            <div id="chapterTakeawaysContainer" class="space-y-3.5"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- TAB 5: ALL PLAYLIST VIDEOS & COURSE ROLLUP (ALL 42+ VIDEOS!)        -->
+    <!-- =================================================================== -->
+    <section id="tabPanelRollup" class="hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2 space-y-6">
+          <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 space-y-4 print-card">
+            <h2 class="text-base font-bold text-white flex items-center gap-2 print-text-dark">
+              <span class="w-2 h-5 rounded-full bg-rose-500"></span>
+              <span>Master Course Synthesis Across All Playlist Videos</span>
+            </h2>
+            <p id="rollupMasterThesis" class="text-sm text-slate-200 leading-relaxed print-text-dark"></p>
+            <div class="pt-3 border-t border-slate-800/80">
+              <h3 class="text-xs font-semibold uppercase tracking-wider text-rose-400 mb-3">Cross-Lecture Connections</h3>
+              <ul id="rollupCrossTakeaways" class="space-y-2 text-sm text-slate-200 max-h-96 overflow-y-auto pr-2 print-text-dark"></ul>
+            </div>
+          </div>
+
+          <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 space-y-4 print-card">
+            <h2 class="text-base font-bold text-white flex items-center gap-2 print-text-dark">
+              <span class="w-2 h-5 rounded-full bg-indigo-500"></span>
+              <span>Curriculum Progression Modules</span>
+            </h2>
+            <div id="rollupProgressionList" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+          </div>
+        </div>
+
+        <div class="space-y-6">
+          <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 space-y-3 print-card">
+            <h2 class="text-base font-bold text-white print-text-dark">⚡ Exam & Interview Study Strategy</h2>
+            <p id="rollupWatchStrategy" class="text-sm text-slate-300 leading-relaxed print-text-dark"></p>
+          </div>
+          <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 space-y-3 print-card">
+            <h2 class="text-base font-bold text-white print-text-dark">📖 Course Glossary</h2>
+            <div id="rollupGlossaryList" class="space-y-3"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Full Grid of All Videos in Playlist (All 42+ Videos!) -->
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 space-y-4 print-card">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h2 class="text-base font-bold text-white print-text-dark">Complete Playlist Catalog (All Videos)</h2>
+            <p class="text-xs text-slate-400">Click any lecture card to inspect or generate its full AI Exam & Interview Study Guide</p>
+          </div>
+          <span id="rollupCatalogCountBadge" class="text-xs font-semibold text-rose-300 mono"></span>
+        </div>
+        <div id="rollupAllVideosGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- TAB 6: PLAYLIST DURATION & PLAYBACK SPEED CALCULATOR                -->
+    <!-- =================================================================== -->
+    <section id="tabPanelCalculator" class="hidden space-y-6">
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 space-y-6 print-card">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+          <div>
+            <h2 class="text-lg font-bold text-white print-text-dark">Interactive Playlist Duration & Speed Calculator</h2>
+            <p class="text-xs text-slate-400">Plan your exam cramming or interview prep schedule across all videos in the playlist (1x–2x)</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-3 no-print">
+            <div class="flex items-center gap-2 text-xs">
+              <label class="text-slate-400 font-medium">From #</label>
+              <input id="calcStartIdx" type="number" min="1" value="1" onchange="recalculateCustomDuration()" class="w-16 bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-white mono text-center" />
+            </div>
+            <div class="flex items-center gap-2 text-xs">
+              <label class="text-slate-400 font-medium">To #</label>
+              <input id="calcEndIdx" type="number" min="1" value="3" onchange="recalculateCustomDuration()" class="w-16 bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-white mono text-center" />
+            </div>
+            <button onclick="selectAllPlaylistVideos(true)" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs text-slate-200 border border-slate-700">
+              Select All
+            </button>
+          </div>
+        </div>
+
+        <div id="speedCardsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4"></div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs sm:text-sm">
+            <thead>
+              <tr class="border-b border-slate-800 text-slate-400 uppercase text-[11px] tracking-wider">
+                <th class="py-3 px-3 no-print">Include</th>
+                <th class="py-3 px-3">#</th>
+                <th class="py-3 px-3">Lecture Title</th>
+                <th class="py-3 px-3 text-right">1.0x</th>
+                <th class="py-3 px-3 text-right">1.25x</th>
+                <th class="py-3 px-3 text-right">1.5x</th>
+                <th class="py-3 px-3 text-right">1.75x</th>
+                <th class="py-3 px-3 text-right">2.0x</th>
+              </tr>
+            </thead>
+            <tbody id="durationCalculatorTableBody" class="divide-y divide-slate-800/70"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- API & Backend Configuration Modal -->
+  <div id="settingsModal" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 hidden items-center justify-center p-4 no-print">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-lg w-full p-6 space-y-5 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div>
+          <h3 class="text-base font-bold text-white">Full-Stack Backend & AI Keys Configuration</h3>
+          <p class="text-xs text-slate-400">Add BOTH your YouTube Data API v3 Key and your Gemini/OpenAI Key for deep lecture summarization</p>
+        </div>
+        <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-white text-lg font-bold">✕</button>
+      </div>
+
+      <div class="space-y-4 text-xs">
+        <div>
+          <label class="block font-semibold text-slate-300 mb-1">FastAPI Backend Base URL</label>
+          <input id="cfgBackendUrl" type="text" value="http://localhost:8000" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white mono" />
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-300 mb-1">YouTube Data API v3 Key (Required for Live Video/Playlist Metadata)</label>
+          <input id="cfgYoutubeKey" type="password" placeholder="AIzaSy... (or set YOUTUBE_API_KEY in backend .env)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white mono" />
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1">LLM Provider</label>
+            <select id="cfgLlmProvider" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white">
+              <option value="gemini" selected>Google Gemini API</option>
+              <option value="openai">OpenAI API</option>
+            </select>
+          </div>
+          <div class="sm:col-span-2">
+            <label class="block font-semibold text-emerald-400 mb-1">Gemini / OpenAI API Key (Required for AI Study Notes!)</label>
+            <input id="cfgLlmKey" type="password" placeholder="Paste your Google AI Studio Gemini API Key here" class="w-full bg-slate-950 border border-emerald-500/50 rounded-lg px-3 py-2 text-white mono" />
+          </div>
+        </div>
+        <p class="text-[11px] text-slate-400">
+          Don't have a Gemini API key yet? Get one for free in 10 seconds at <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-rose-400 underline">Google AI Studio</a>.
+        </p>
+      </div>
+
+      <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-800">
+        <button onclick="closeSettingsModal()" class="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-300">Cancel</button>
+        <button onclick="saveSettingsModal()" class="px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-500 text-xs font-semibold text-white">Save Configuration</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const DEMO_PRESETS = {
+      cs229_playlist: {
+        kind: "playlist",
+        playlist: {
+          playlist_id: "PLoROMvodv4rMiGQp3WXShtMGgzqpfVfbU",
+          url: "https://www.youtube.com/playlist?list=PLoROMvodv4rMiGQp3WXShtMGgzqpfVfbU",
+          title: "Stanford CS229: Machine Learning Lectures (Exam & Interview Study Edition)",
+          channel_title: "Stanford Online (Prof. Andrew Ng)",
+          published_at: "2020-04-17",
+          total_item_count: 20,
+          fetched_video_count: 3
+        },
+        playlist_rollup: {
+          master_thesis: "Stanford CS229 teaches the mathematical foundations and practical engineering trade-offs of modern Machine Learning. Across these core lectures, Prof. Andrew Ng derives Linear Regression (Batch/Stochastic Gradient Descent vs. closed-form Normal Equations), proves why Least Squares is equivalent to Maximum Likelihood under Gaussian noise, formulates Logistic Regression & Newton's Method, and unifies regression and classification under Exponential Family Generalized Linear Models (GLMs).",
+          learning_progression: [
+            {
+              phase: "Lecture 1: Supervised Learning & LMS Gradient Descent",
+              focus: "Defines empirical risk minimization, formulates linear hypothesis h_θ(x) = θ^T x, defines quadratic cost J(θ), and derives the Widrow-Hoff (LMS) partial derivative update rule."
+            },
+            {
+              phase: "Lecture 2: Normal Equations, Probabilistic MLE & Locally Weighted Regression",
+              focus: "Derives closed-form θ = (X^T X)^(-1) X^T y via matrix calculus, proves equivalence of Least Squares and Gaussian MLE, and introduces non-parametric Locally Weighted Regression (Loess)."
+            },
+            {
+              phase: "Lecture 3: Logistic Regression, Newton's Method & GLMs",
+              focus: "Derives binary classification via the sigmoid function, maximizes Bernoulli log-likelihood via Gradient Ascent and Newton-Raphson (Hessian), and generalizes to Exponential Family GLMs."
+            }
+          ],
+          cross_video_takeaways: [
+            "Identical Functional Gradient Form (Lectures 1 & 3): Linear Regression LMS and Logistic Regression Gradient Ascent have the exact same update equation θ_j := θ_j + α(y^(i) - h_θ(x^(i)))x_j^(i) because both arise from canonical Exponential Family GLMs (Lecture 3).",
+            "Iterative vs. Analytical Scaling (Lectures 1, 2 & 3): Gradient Descent costs O(m·n) per iteration and scales to large n; Normal Equations cost O(n^3) to invert X^T X; Newton's Method converges quadratically in ~5–10 steps but also costs O(n^3) per step to invert the Hessian H.",
+            "Parametric vs. Non-Parametric Memory Trade-off (Lecture 2): Standard Linear Regression compresses training data into fixed parameters θ ∈ R^(n+1), whereas Locally Weighted Regression must keep all m training points in memory and solve a weighted normal equation at every query x."
+          ],
+          recommended_watch_strategy: "For university exams, memorize the 3-step GLM construction (Lecture 3) and the trace/matrix derivative proofs for the Normal Equations (Lecture 2). For ML interviews, practice the comparison table between Batch GD, SGD, Normal Equations, and Newton's Method.",
+          glossary_terms: [
+            { term: "Design Matrix (X)", definition: "An m × (n+1) matrix where row i contains the transposed feature vector (x^(i))^T including intercept x_0 = 1." },
+            { term: "Hessian Matrix (H)", definition: "Square n × n matrix of second-order partial derivatives H_jk = ∂^2 l(θ) / (∂θ_j ∂θ_k) used in Newton's Method." },
+            { term: "Canonical Link / Response Function", definition: "In GLMs, the mapping g(η) = E[T(y); η] = ∂a(η)/∂η connecting linear predictor η = θ^T x to expected output." }
+          ]
+        },
+        videos: [
+          {
+            video_id: "jGwO_UgTS7I",
+            url: "https://www.youtube.com/watch?v=jGwO_UgTS7I",
+            title: "Lecture 1 — Supervised Learning, Cost Functions & Gradient Descent Derivation",
+            channel_title: "Stanford Online",
+            duration_seconds: 4520,
+            duration_formatted: "1:15:20",
+            duration_human: "1h 15m 20s",
+            transcript_status: "English (Full Lecture Transcript Analyzed)",
+            transcript_word_count: 11420,
+            summary: {
+              executive_summary: "Prof. Andrew Ng defines Machine Learning (Arthur Samuel & Tom Mitchell definitions), contrasts Supervised Learning (regression vs. classification) with Unsupervised Learning (clustering, ICA blind source separation), and derives single- and multi-feature Linear Regression trained via the Least Mean Squares (LMS) Gradient Descent algorithm.",
+              key_takeaways: [
+                "Tom Mitchell's Formal Definition: A program learns from Experience E with respect to Task T and Performance measure P if its performance on T, as measured by P, improves with E.",
+                "Linear Hypothesis with Intercept Convention: By defining dummy feature x_0 = 1, the linear prediction h_θ(x) = θ_0 + θ_1 x_1 + ... + θ_n x_n simplifies to inner product θ^T x.",
+                "Convexity of Quadratic Loss: The squared error cost J(θ) = (1/2) Σ_{i=1}^m (h_θ(x^(i)) - y^(i))^2 is a bowl-shaped convex quadratic surface with a single global minimum and no local minima.",
+                "Proportional Error Scaling in LMS: The partial derivative ∂J/∂θ_j = (h_θ(x) - y)·x_j naturally makes big updates when prediction error is large and tiny updates as θ approaches the optimum."
+              ],
+              action_items: [
+                "Derive ∂/∂θ_j [1/2 (θ^T x - y)^2] by hand for a single training example and verify how the 1/2 cancels the exponent 2.",
+                "Write a 15-line NumPy implementation of Batch Gradient Descent and plot J(θ) versus iteration number."
+              ],
+              lecture_notes: {
+                core_concepts_taught: [
+                  {
+                    concept: "Supervised vs. Unsupervised Learning Paradigms",
+                    timestamp: "11:20",
+                    start_seconds: 680,
+                    explanation: "In Supervised Learning, every training example (x^(i), y^(i)) includes the ground-truth right answer y^(i). When y ∈ R is continuous (e.g., predicting Portland house prices from square footage and bedrooms), it is Regression. When y ∈ {0, 1, ..., k-1} is discrete (e.g., classifying breast tumors as malignant=1 or benign=0 from clump thickness and cell uniformity), it is Classification. In Unsupervised Learning, we are given only unlabeled inputs {x^(1), ..., x^(m)} and must discover latent structure (such as k-means clustering of Google News stories or Independent Component Analysis separating two overlapping speakers in the Cocktail Party Problem).",
+                    key_points: [
+                      "Standard CS229 notation: m = number of training examples, n = number of input features, x^(i) ∈ R^(n+1) = i-th input vector, y^(i) = i-th target label.",
+                      "Support Vector Machines (previewed at 26:40) use the kernel trick to map non-linearly separable data into infinite-dimensional feature spaces."
+                    ]
+                  },
+                  {
+                    concept: "Linear Regression Hypothesis & Squared Error Cost J(θ)",
+                    timestamp: "46:15",
+                    start_seconds: 2775,
+                    explanation: "To predict housing price y from living area x_1 and age x_2, we posit a linear model h_θ(x) = θ_0 + θ_1 x_1 + θ_2 x_2. Setting x_0 = 1 lets us write h_θ(x) = Σ_{j=0}^n θ_j x_j = θ^T x. To choose optimal parameters θ, we minimize the sum of squared residuals between predicted h_θ(x^(i)) and actual y^(i) across all m examples, multiplied by 1/2 to simplify differentiation.",
+                    key_points: [
+                      "Why 1/2 in J(θ)? When differentiating (h_θ(x) - y)^2 via the chain rule, the factor of 2 brings down 2·(1/2) = 1, leaving a clean residual (h_θ(x) - y).",
+                      "Because J(θ) is a sum of squares of linear functions of θ, its Hessian is positive semi-definite (X^T X ≥ 0), guaranteeing global convexity."
+                    ]
+                  },
+                  {
+                    concept: "Gradient Descent & The Widrow-Hoff (LMS) Update Rule",
+                    timestamp: "55:10",
+                    start_seconds: 3310,
+                    explanation: "Gradient Descent starts with an initial guess θ (e.g., θ = 0) and repeatedly performs the simultaneous update θ_j := θ_j - α (∂J(θ)/∂θ_j) for all j = 0, ..., n, where α > 0 is the learning rate. Applying the chain rule to a single example gives ∂/∂θ_j [1/2 (h_θ(x) - y)^2] = (h_θ(x) - y)·(∂/∂θ_j Σ θ_k x_k) = (h_θ(x) - y)·x_j. Summing over all m examples yields Batch Gradient Descent.",
+                    key_points: [
+                      "Simultaneous update requirement: Compute the right-hand side for all j = 0..n using the old θ vector BEFORE overwriting any θ_j.",
+                      "If α is too small, convergence is slow; if α is too large, Gradient Descent overshoots the minimum and diverges."
+                    ]
+                  }
+                ],
+                formulas_and_algorithms: [
+                  {
+                    name: "Linear Hypothesis (Vectorized Form)",
+                    expression: "h_θ(x) = θ_0 + θ_1 x_1 + ... + θ_n x_n = θ^T x   (with x_0 = 1)",
+                    when_to_use: "Whenever modeling a continuous target y as a weighted linear combination of n input features.",
+                    explanation: "θ ∈ R^(n+1) is the parameter/weight vector and x ∈ R^(n+1) is the feature vector."
+                  },
+                  {
+                    name: "Ordinary Least Squares Cost Function J(θ)",
+                    expression: "J(θ) = (1 / 2) Σ_{i=1}^m (h_θ(x^(i)) - y^(i))^2",
+                    when_to_use: "Objective function minimized in Linear Regression.",
+                    explanation: "Measures half the sum of squared vertical distances between data points and the regression hyperplane."
+                  },
+                  {
+                    name: "Batch Gradient Descent (LMS Rule)",
+                    expression: "θ_j := θ_j - α Σ_{i=1}^m (h_θ(x^(i)) - y^(i)) · x_j^(i)   (for every j = 0..n)",
+                    when_to_use: "When feature count n is large (e.g. n > 10,000) and dataset size m fits in memory.",
+                    explanation: "Performs one parameter step after scanning all m training examples; time complexity is O(m·n) per iteration."
+                  }
+                ],
+                worked_examples: [
+                  {
+                    title: "Portland Housing Price Prediction Walkthrough",
+                    timestamp: "44:30",
+                    problem: "Given a dataset of m = 47 houses in Portland, Oregon with living area x_1 (in sq. ft.) and number of bedrooms x_2, predict selling price y (in $1000s).",
+                    step_by_step_solution: "1. Represent each house as x^(i) = [1, area^(i), bedrooms^(i)]^T. 2. Initialize θ = [0, 0, 0]^T. 3. On contour plots of J(θ_0, θ_1), each step moves perpendicular to the contour ellipses toward the center bowl minimum (θ_0 ≈ 71.27, θ_1 ≈ 0.1345)."
+                  },
+                  {
+                    title: "Cocktail Party Blind Source Separation (ICA)",
+                    timestamp: "38:05",
+                    problem: "Two microphones are placed at different distances from two speakers talking simultaneously in a room. Separate the two mixed audio recordings into clean individual voice tracks.",
+                    step_by_step_solution: "Using Unsupervised Learning (Independent Component Analysis via `W = unmix(X)`), the algorithm finds a linear unmixing matrix that maximizes statistical independence between output channels without needing any labeled clean speech."
+                  }
+                ],
+                comparison_table: [
+                  {
+                    aspect: "Target Output y",
+                    approach_a: "Regression: y ∈ R is continuous (e.g., house price, temperature)",
+                    approach_b: "Classification: y ∈ {0, 1, ..., k} is discrete class label",
+                    verdict: "Check whether the output is a real-valued quantity or a category."
+                  },
+                  {
+                    aspect: "Training Data Supervision",
+                    approach_a: "Supervised Learning: Paired (x^(i), y^(i)) with ground-truth labels",
+                    approach_b: "Unsupervised Learning: Unlabeled {x^(i)} only (clustering, density estimation, ICA)",
+                    verdict: "Use Supervised when labeled targets exist; Unsupervised to discover structure or compress features."
+                  }
+                ]
+              },
+              exam_prep: {
+                cheat_sheet_points: [
+                  "Always include x_0^(i) = 1 so the bias term θ_0 is folded into the vector inner product θ^T x^(i).",
+                  "Derivative of squared error for 1 example: ∂/∂θ_j [1/2 (θ^T x - y)^2] = (θ^T x - y) x_j.",
+                  "The direction of steepest ascent is +∇J(θ); steepest descent is -∇J(θ), which is ALWAYS orthogonal (perpendicular) to the contour lines of J(θ).",
+                  "Linear regression J(θ) has NO local optima other than the global minimum because it is a convex quadratic function."
+                ],
+                common_exam_traps: [
+                  "Trap 1 (Non-Simultaneous Update Bug): Updating θ_0 first and immediately using the new θ_0 inside h_θ(x) when computing the update for θ_1 changes the algorithm and invalidates true gradient descent.",
+                  "Trap 2 (Forgetting x_j^(i) in the Chain Rule): Students often write ∂J/∂θ_j = (h_θ(x) - y) and forget to multiply by the inner derivative ∂(θ^T x)/∂θ_j = x_j."
+                ],
+                exam_questions: [
+                  {
+                    question: "Derive the Batch Gradient Descent update rule for θ_j from the cost function J(θ) = (1/2) Σ_{i=1}^m (h_θ(x^(i)) - y^(i))^2 where h_θ(x) = Σ_{k=0}^n θ_k x_k.",
+                    difficulty: "Easy-Medium (Midterm Derivation)",
+                    model_answer: "Step 1: Take partial derivative with respect to θ_j: ∂J(θ)/∂θ_j = ∂/∂θ_j [(1/2) Σ_{i=1}^m (h_θ(x^(i)) - y^(i))^2]. Step 2: By linearity and the chain rule, pull down the 2 to cancel 1/2: = Σ_{i=1}^m (h_θ(x^(i)) - y^(i)) · ∂/∂θ_j (Σ_{k=0}^n θ_k x_k^(i)). Step 3: Since ∂(θ_k x_k^(i))/∂θ_j = 0 for k ≠ j and x_j^(i) for k = j, the inner derivative is x_j^(i). Step 4: Substitute into θ_j := θ_j - α (∂J/∂θ_j) to get θ_j := θ_j - α Σ_{i=1}^m (h_θ(x^(i)) - y^(i)) x_j^(i)."
+                  },
+                  {
+                    question: "Why does Gradient Descent naturally take smaller steps as it approaches the global minimum, even when the learning rate α is held fixed?",
+                    difficulty: "Conceptual (Short Answer)",
+                    model_answer: "Because the step size is α · ||∇J(θ)||. As θ approaches the convex global minimum θ*, the slope/gradient ∇J(θ) approaches 0 continuously. Therefore, the update magnitude α·∇J(θ) shrinks automatically toward zero without needing to decay α."
+                  }
+                ]
+              },
+              interview_prep: {
+                interview_questions: [
+                  {
+                    question: "What happens if one feature x_1 is in square feet (range 500–5000) and x_2 is number of bedrooms (range 1–5) during Gradient Descent? How do you fix it?",
+                    topic_tag: "Optimization & Feature Scaling",
+                    elevator_pitch_30s: "Disparate feature scales create highly elongated, skinny elliptical contours for J(θ). Gradient descent oscillates back and forth perpendicular to the long axis and takes a very long time to reach the minimum. Standardizing features (zero mean, unit variance) makes contours spherical so gradient descent points straight at the minimum.",
+                    deep_dive_answer: "Mathematically, the Hessian of J(θ) is H = X^T X. When feature scales differ by 1000x, the eigenvalues of X^T X have a massive condition number κ = λ_max / λ_min. The maximum stable learning rate α is bounded by 2/λ_max, forcing tiny progress along the flat eigendirection λ_min.",
+                    follow_up_tradeoffs: "Note that the closed-form Normal Equation θ = (X^T X)^(-1) X^T y is scale-invariant and does NOT require feature scaling (except for numerical floating-point conditioning), whereas Gradient Descent and L1/L2 regularized models strictly require feature standardization."
+                  },
+                  {
+                    question: "Why do we use Mean Squared Error (L2 loss) instead of Mean Absolute Error (L1 loss) as the default in Ordinary Least Squares?",
+                    topic_tag: "Loss Functions",
+                    elevator_pitch_30s: "Squared error is smooth and continuously differentiable everywhere (allowing closed-form Normal Equations and smooth gradient scaling), and it corresponds to the Maximum Likelihood Estimate when target noise is Gaussian.",
+                    deep_dive_answer: "L1 loss |h_θ(x) - y| has a non-differentiable kink at 0 (subgradient ±1), so its gradient magnitude is constant even very close to the minimum, causing oscillation unless α decays. However, L2 squares large errors, making it sensitive to outliers.",
+                    follow_up_tradeoffs: "In production with heavy-tailed outliers, use Huber Loss (quadratic near zero, linear in the tails) to get smooth gradients near the optimum and robustness to outliers."
+                  }
+                ],
+                flashcards: [
+                  {
+                    front: "What is the partial derivative ∂/∂θ_j of 1/2 (h_θ(x) - y)^2?",
+                    back: "(h_θ(x) - y) · x_j",
+                    tag: "Formula"
+                  },
+                  {
+                    front: "Why are Gradient Descent steps always perpendicular to contour lines of J(θ)?",
+                    back: "Because a contour line is a level set where J(θ) = c (directional derivative is 0 along the tangent), so the gradient vector ∇J(θ) is orthogonal to the tangent.",
+                    tag: "Calculus Intuition"
+                  },
+                  {
+                    front: "What is the time complexity of 1 iteration of Batch Gradient Descent over m examples and n features?",
+                    back: "O(m · n)",
+                    tag: "Complexity"
+                  }
+                ]
+              },
+              chapters: [
+                {
+                  chapter_number: 1,
+                  title: "Course Overview & Formal Definitions of ML",
+                  timestamp: "00:00",
+                  start_seconds: 0,
+                  deep_link: "https://www.youtube.com/watch?v=jGwO_UgTS7I&t=0s",
+                  summary: "Defines ML via Arthur Samuel (1959) and Tom Mitchell (E, T, P) and outlines the CS229 syllabus.",
+                  what_is_taught: "Arthur Samuel coined ML as giving computers the ability to learn without being explicitly programmed (demonstrated by his checkers program playing tens of thousands of games against itself). Tom Mitchell formalized this: performance P on task T improves with experience E.",
+                  takeaways: [
+                    "Checkers program learned board evaluation weights from self-play experience.",
+                    "Syllabus covers Supervised, Unsupervised, Deep Learning, Generalization Theory, and RL."
+                  ]
+                },
+                {
+                  chapter_number: 2,
+                  title: "Supervised vs. Unsupervised Learning & ICA",
+                  timestamp: "18:40",
+                  start_seconds: 1120,
+                  deep_link: "https://www.youtube.com/watch?v=jGwO_UgTS7I&t=1120s",
+                  summary: "Contrasts regression and classification with unsupervised clustering and Cocktail Party source separation.",
+                  what_is_taught: "Regression predicts continuous values (housing prices); Classification predicts discrete classes (tumor malignancy). Unsupervised learning finds structure in unlabeled x^(i) (clustering genomics microarrays, Google News grouping, and Independent Component Analysis).",
+                  takeaways: [
+                    "Notation: m examples, n features, x^(i) input vector, y^(i) target.",
+                    "ICA separates overlapping audio tracks by maximizing statistical independence."
+                  ]
+                },
+                {
+                  chapter_number: 3,
+                  title: "Linear Regression & LMS Gradient Descent Derivation",
+                  timestamp: "46:15",
+                  start_seconds: 2775,
+                  deep_link: "https://www.youtube.com/watch?v=jGwO_UgTS7I&t=2775s",
+                  summary: "Formulates h_θ(x) = θ^T x, squared error J(θ), and derives the LMS update rule via partial differentiation.",
+                  what_is_taught: "Sets x_0 = 1 so h_θ(x) = θ^T x. Defines J(θ) = 1/2 Σ(h_θ(x^(i)) - y^(i))^2. Computes ∂J/∂θ_j = Σ(h_θ(x^(i)) - y^(i))x_j^(i) and demonstrates convergence on contour ellipses.",
+                  takeaways: [
+                    "Update rule: θ_j := θ_j - α Σ_{i=1}^m (h_θ(x^(i)) - y^(i)) x_j^(i).",
+                    "Quadratic cost surface is strictly convex (bowl-shaped) with a single global minimum."
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            video_id: "4b4MUYve_U8",
+            url: "https://www.youtube.com/watch?v=4b4MUYve_U8",
+            title: "Lecture 2 — Stochastic GD, Normal Equations, Gaussian MLE & Locally Weighted Regression",
+            channel_title: "Stanford Online",
+            duration_seconds: 4390,
+            duration_formatted: "1:13:10",
+            duration_human: "1h 13m 10s",
+            transcript_status: "English (Full Lecture Transcript Analyzed)",
+            transcript_word_count: 10890,
+            summary: {
+              executive_summary: "Contrasts Batch vs. Stochastic Gradient Descent (SGD), introduces matrix calculus (trace operator & matrix derivatives) to derive the closed-form Normal Equations θ = (X^T X)^(-1) X^T y, proves that Least Squares is equivalent to Maximum Likelihood Estimation (MLE) under i.i.d. Gaussian noise, and teaches Locally Weighted Linear Regression (LWR).",
+              key_takeaways: [
+                "Batch GD vs. SGD: Batch GD sums all m examples per step (slow on huge m); SGD updates θ on every single example (x^(i), y^(i)), making immediate progress on millions of rows.",
+                "Closed-Form Normal Equation: Setting ∇_θ J(θ) = X^T X θ - X^T y = 0 gives θ = (X^T X)^(-1) X^T y in a single O(n^3) step without choosing a learning rate α.",
+                "Probabilistic Justification of Least Squares: Assuming y^(i) = θ^T x^(i) + ε^(i) with ε^(i) ~ N(0, σ^2) i.i.d., maximizing log-likelihood l(θ) is mathematically identical to minimizing 1/2 Σ(y^(i) - θ^T x^(i))^2, independent of σ^2.",
+                "Non-Parametric Locally Weighted Regression (LWR): Fits θ around a specific query point x by weighting training examples via w^(i) = exp(-(x^(i) - x)^2 / (2τ^2))."
+              ],
+              action_items: [
+                "Practice the 4-line matrix derivative proof of ∇_θ [1/2 (Xθ - y)^T (Xθ - y)] = X^T X θ - X^T y.",
+                "Implement Locally Weighted Regression with bandwidth τ ∈ {0.1, 0.5, 2.0} to observe overfitting vs. underfitting."
+              ],
+              lecture_notes: {
+                core_concepts_taught: [
+                  {
+                    concept: "Batch Gradient Descent vs. Stochastic Gradient Descent (SGD)",
+                    timestamp: "00:00",
+                    start_seconds: 0,
+                    explanation: "In Batch Gradient Descent, computing a single gradient step requires summing over all m training examples. If m = 300 million census records, you must read the entire database just to take one tiny step. Stochastic (Incremental) Gradient Descent loops through i = 1..m and immediately updates θ_j := θ_j - α (h_θ(x^(i)) - y^(i)) x_j^(i) after seeing each single example. SGD approaches the minimum much faster, though it perpetually oscillates in a small neighborhood around the global minimum.",
+                    key_points: [
+                      "In practice, decaying learning rate α_t = c_1 / (t + c_2) lets SGD settle into the exact global minimum.",
+                      "Mini-batch GD averages over b ∈ [32, 256] examples to balance vectorized GPU throughput with fast updates."
+                    ]
+                  },
+                  {
+                    concept: "Matrix Derivatives & Closed-Form Normal Equations Derivation",
+                    timestamp: "17:25",
+                    start_seconds: 1045,
+                    explanation: "Stack all m feature vectors into the Design Matrix X ∈ R^(m × (n+1)) and targets into y ∈ R^m. Then the residual vector is (Xθ - y), and J(θ) = (1/2)(Xθ - y)^T (Xθ - y). Expanding gives (1/2)(θ^T X^T X θ - 2 θ^T X^T y + y^T y). Using the matrix calculus identities ∇_θ (θ^T A θ) = 2Aθ (for symmetric A = X^T X) and ∇_θ (b^T θ) = b, we get ∇_θ J(θ) = X^T X θ - X^T y. Setting this gradient to zero yields the Normal Equations: X^T X θ = X^T y, or θ = (X^T X)^(-1) X^T y.",
+                    key_points: [
+                      "What if X^T X is non-invertible (singular)? This happens when m ≤ n (fewer examples than features) or when features are linearly dependent (e.g., x_1 in sq. ft. and x_2 in sq. meters). Fix: use Moore-Penrose pseudoinverse (`np.linalg.pinv`), drop redundant features, or add L2 Ridge regularization (X^T X + λI)^(-1).",
+                      "Trace identities taught: tr(ABC) = tr(CAB) = tr(BCA),tr(A) = tr(A^T), and ∇_A tr(AB) = B^T."
+                    ]
+                  },
+                  {
+                    concept: "Probabilistic Interpretation: Why Least Squares = Gaussian MLE",
+                    timestamp: "42:50",
+                    start_seconds: 2570,
+                    explanation: "Assume target values satisfy y^(i) = θ^T x^(i) + ε^(i), where ε^(i) captures unmodeled variables and random noise. By the Central Limit Theorem, the sum of many independent error sources is well modeled as a Gaussian ε^(i) ~ N(0, σ^2). Thus p(y^(i) | x^(i); θ) = (1 / (√(2π)σ)) exp(-(y^(i) - θ^T x^(i))^2 / (2σ^2)). For i.i.d. examples, Likelihood L(θ) = Π_{i=1}^m p(y^(i)|x^(i); θ). Taking the log gives l(θ) = m·log(1/(√(2π)σ)) - (1/σ^2) · (1/2) Σ_{i=1}^m (y^(i) - θ^T x^(i))^2. Maximizing l(θ) over θ is identical to minimizing J(θ)!",
+                    key_points: [
+                      "Notice that the optimal θ_MLE does NOT depend on the noise variance σ^2 at all.",
+                      "Frequentist notation: p(y | x; θ) uses a semicolon because θ is a fixed unknown parameter, not a random variable."
+                    ]
+                  },
+                  {
+                    concept: "Locally Weighted Linear Regression (LWR / Loess)",
+                    timestamp: "56:30",
+                    start_seconds: 3390,
+                    explanation: "Instead of struggling to engineer non-linear polynomial features φ(x), LWR is a non-parametric algorithm that fits a local linear model around the specific query point x you want to predict. It minimizes Σ_{i=1}^m w^(i) (y^(i) - θ^T x^(i))^2 where weights are w^(i) = exp(-||x^(i) - x||^2 / (2τ^2)). Points close to query x get weight near 1; points far away get weight exponentially close to 0.",
+                    key_points: [
+                      "Bandwidth parameter τ (tau) controls the neighborhood width: tiny τ → jagged overfitting; huge τ → approaches global unweighted linear regression (underfitting).",
+                      "Closed-form weighted normal equation: θ = (X^T W X)^(-1) X^T W y, where W = diag(w^(1), ..., w^(m))."
+                    ]
+                  }
+                ],
+                formulas_and_algorithms: [
+                  {
+                    name: "Vectorized Cost & Normal Equation",
+                    expression: "J(θ) = 1/2 (Xθ - y)^T (Xθ - y)   ⟹   θ* = (X^T X)^(-1) X^T y",
+                    when_to_use: "Closed-form analytical solution for Linear Regression when n ≤ 10,000.",
+                    explanation: "X is m × (n+1), X^T X is (n+1) × (n+1). Matrix inversion takes O(n^3) time."
+                  },
+                  {
+                    name: "Gaussian Log-Likelihood l(θ)",
+                    expression: "l(θ) = -m/2 log(2πσ^2) - (1 / (2σ^2)) Σ_{i=1}^m (y^(i) - θ^T x^(i))^2",
+                    when_to_use: "Proving that Ordinary Least Squares equals Maximum Likelihood Estimation under Gaussian noise.",
+                    explanation: "Maximizing l(θ) over θ minimizes the negative quadratic term, which is J(θ)."
+                  },
+                  {
+                    name: "Locally Weighted Regression (LWR) Kernel Weight",
+                    expression: "w^(i) = exp( - (x^(i) - x)^2 / (2 τ^2) )",
+                    when_to_use: "Non-parametric local regression around a specific test query point x.",
+                    explanation: "Note: Despite looking like a Gaussian formula, w^(i) is a distance weighting kernel, NOT a probability density."
+                  }
+                ],
+                worked_examples: [
+                  {
+                    title: "4-Step Matrix Derivative Proof of the Normal Equations",
+                    timestamp: "31:10",
+                    problem: "Prove ∇_θ J(θ) = X^T X θ - X^T y starting from J(θ) = 1/2 (Xθ - y)^T (Xθ - y).",
+                    step_by_step_solution: "1. Distribute transpose: (Xθ - y)^T (Xθ - y) = θ^T X^T X θ - θ^T X^T y - y^T X θ + y^T y. 2. Since θ^T X^T y is a 1×1 scalar, it equals its transpose y^T X θ. 3. Thus J(θ) = 1/2 θ^T (X^T X) θ - (X^T y)^T θ + 1/2 y^T y. 4. Differentiate w.r.t. θ: 1/2 · 2(X^T X)θ - X^T y + 0 = X^T X θ - X^T y. Set to 0 to obtain X^T X θ = X^T y."
+                  }
+                ],
+                comparison_table: [
+                  {
+                    aspect: "Batch GD vs. Stochastic GD (SGD)",
+                    approach_a: "Batch GD: O(m·n) per step; smooth path to exact global minimum",
+                    approach_b: "SGD: O(n) per step; fast initial convergence on huge m, oscillates near minimum",
+                    verdict: "Use SGD (or Mini-Batch GD) whenever dataset size m is large (> 50,000)."
+                  },
+                  {
+                    aspect: "Gradient Descent vs. Normal Equations",
+                    approach_a: "Gradient Descent: Needs α tuning & many iterations, but scales as O(k·m·n)",
+                    approach_b: "Normal Equation: Zero hyperparameters, 1-shot solve, but matrix inversion costs O(n^3)",
+                    verdict: "Use Normal Equations if n < 10,000; use Gradient Descent if n > 10,000."
+                  },
+                  {
+                    aspect: "Parametric (OLS) vs. Non-Parametric (LWR)",
+                    approach_a: "Parametric: Fixed number of parameters θ_0..θ_n; O(n) inference time",
+                    approach_b: "Non-Parametric (LWR): Keeps all m examples in memory; O(m·n^2 + n^3) inference per query",
+                    verdict: "Use LWR when n is small (1D–3D) and relationship is complex; parametric when m is huge."
+                  }
+                ]
+              },
+              exam_prep: {
+                cheat_sheet_points: [
+                  "Normal Equation: θ = (X^T X)^(-1) X^T y. For Weighted Least Squares (LWR): θ = (X^T W X)^(-1) X^T W y.",
+                  "Two causes of non-invertible (X^T X): (1) collinear/redundant features (rank deficiency), (2) m < n+1 (more parameters than training points).",
+                  "Under y = θ^T x + ε with ε ~ N(0, σ^2), θ_MLE = θ_OLS regardless of the value of σ^2.",
+                  "Key Matrix Calculus Rules: ∇_x (b^T x) = b,  ∇_x (x^T A x) = (A + A^T)x = 2Ax (if A is symmetric)."
+                ],
+                common_exam_traps: [
+                  "Trap 1 (Order of Transpose in Normal Equations): Writing (X X^T)^(-1) instead of (X^T X)^(-1). Remember X is m × (n+1), so X^T X is the small (n+1) × (n+1) feature covariance matrix, whereas X X^T is a massive m × m matrix!",
+                  "Trap 2 (Confusing LWR Weights with Gaussian Probabilities): The bandwidth τ in w^(i) = exp(-(x^(i)-x)^2/(2τ^2)) is a hyperparameter chosen via cross-validation, NOT a random variable variance."
+                ],
+                exam_questions: [
+                  {
+                    question: "Suppose we have m training examples and n features, and we assign a positive weight w^(i) > 0 to each training example so that J(θ) = (1/2) Σ_{i=1}^m w^(i) (θ^T x^(i) - y^(i))^2. Derive the closed-form Normal Equation for θ.",
+                    difficulty: "Hard (Classic CS229 Midterm Question)",
+                    model_answer: "Step 1: Define diagonal weight matrix W = diag(w^(1), ..., w^(m)) ∈ R^(m×m). Step 2: Notice that J(θ) can be written in matrix form as J(θ) = (1/2) (Xθ - y)^T W (Xθ - y). Step 3: Expand: J(θ) = (1/2) [θ^T (X^T W X) θ - 2 y^T W X θ + y^T W y]. Step 4: Since W is diagonal, X^T W X is symmetric. Taking the gradient ∇_θ J(θ) = X^T W X θ - X^T W y = 0 gives the weighted normal equation: θ = (X^T W X)^(-1) X^T W y."
+                  },
+                  {
+                    question: "Prove that maximizing the log-likelihood of y^(i) | x^(i); θ ~ N(θ^T x^(i), σ^2) over m i.i.d. examples yields the Ordinary Least Squares cost function.",
+                    difficulty: "Medium (Exam Proof)",
+                    model_answer: "Write L(θ) = Π_{i=1}^m (2πσ^2)^(-1/2) exp(-(y^(i) - θ^T x^(i))^2 / (2σ^2)). Take natural log: l(θ) = -m/2 ln(2πσ^2) - (1/(2σ^2)) Σ_{i=1}^m (y^(i) - θ^T x^(i))^2. Since the first term is constant w.r.t. θ and 1/σ^2 > 0 is a positive constant scalar, argmax_θ l(θ) = argmin_θ (1/2) Σ_{i=1}^m (y^(i) - θ^T x^(i))^2."
+                  }
+                ]
+              },
+              interview_prep: {
+                interview_questions: [
+                  {
+                    question: "When would you choose the closed-form Normal Equation over Gradient Descent for Linear Regression in production?",
+                    topic_tag: "Algorithm Selection & Scaling",
+                    elevator_pitch_30s: "Choose the Normal Equation when the number of features n is small to moderate (say n < 5,000) because it solves for the exact optimum in one shot without tuning a learning rate. Choose Gradient Descent (specifically Mini-Batch SGD) when n > 10,000 or when data streams online.",
+                    deep_dive_answer: "Forming X^T X takes O(m·n^2) and inverting it via Cholesky/QR takes O(n^3). When n = 100, n^3 = 10^6 operations (milliseconds). When n = 100,000, n^3 = 10^15 operations and X^T X takes 80 GB of RAM!",
+                    follow_up_tradeoffs: "In practice, libraries like `scikit-learn` (`LinearRegression`) don't explicitly invert X^T X; they compute the SVD/QR pseudoinverse `scipy.linalg.lstsq` for numerical stability when features are nearly collinear."
+                  },
+                  {
+                    question: "What causes X^T X to be singular (non-invertible), and how do you fix it mathematically and in code?",
+                    topic_tag: "Linear Algebra & Regularization",
+                    elevator_pitch_30s: "X^T X is singular either when you have more features than training samples (n ≥ m) or when one feature is a linear combination of others (perfect multicollinearity). You fix it by adding L2 Ridge regularization (X^T X + λI) or using the SVD pseudoinverse.",
+                    deep_dive_answer: "Adding λI (λ > 0) shifts every eigenvalue λ_i of the positive semi-definite matrix X^T X to λ_i + λ > 0, guaranteeing strict positive definiteness and invertibility.",
+                    follow_up_tradeoffs: "Dropping collinear features via Variance Inflation Factor (VIF) or PCA also improves interpretability alongside numerical stability."
+                  }
+                ],
+                flashcards: [
+                  {
+                    front: "What is the closed-form Normal Equation for Linear Regression?",
+                    back: "θ = (X^T X)^(-1) X^T y",
+                    tag: "Formula"
+                  },
+                  {
+                    front: "What is the closed-form Normal Equation for Locally Weighted Regression with diagonal weight matrix W?",
+                    back: "θ = (X^T W X)^(-1) X^T W y",
+                    tag: "Formula"
+                  },
+                  {
+                    front: "What noise distribution assumption makes Ordinary Least Squares equivalent to Maximum Likelihood Estimation?",
+                    back: "Independent and identically distributed (i.i.d.) zero-mean Gaussian noise: ε^(i) ~ N(0, σ^2).",
+                    tag: "Theory"
+                  }
+                ]
+              },
+              chapters: [
+                {
+                  chapter_number: 1,
+                  title: "Batch vs. Stochastic Gradient Descent",
+                  timestamp: "00:00",
+                  start_seconds: 0,
+                  deep_link: "https://www.youtube.com/watch?v=4b4MUYve_U8&t=0s",
+                  summary: "Compares full-dataset Batch GD updates against single-example Stochastic GD updates.",
+                  what_is_taught: "Batch GD scans all m examples before one step; SGD updates θ after every example (x^(i), y^(i)), reaching the minimum region much faster on large datasets.",
+                  takeaways: [
+                    "SGD trajectory zig-zags but makes immediate progress from the very first example.",
+                    "Decay learning rate α over time if exact convergence is required."
+                  ]
+                },
+                {
+                  chapter_number: 2,
+                  title: "Matrix Calculus & The Normal Equations",
+                  timestamp: "17:25",
+                  start_seconds: 1045,
+                  deep_link: "https://www.youtube.com/watch?v=4b4MUYve_U8&t=1045s",
+                  summary: "Defines matrix derivatives and trace identities to derive θ = (X^T X)^(-1) X^T y.",
+                  what_is_taught: "Expresses J(θ) = 1/2 (Xθ - y)^T (Xθ - y) and sets ∇_θ J(θ) = X^T X θ - X^T y = 0.",
+                  takeaways: [
+                    "Design matrix X has dimensions m × (n+1).",
+                    "Inverting X^T X costs O(n^3)."
+                  ]
+                },
+                {
+                  chapter_number: 3,
+                  title: "Probabilistic Justification (Gaussian MLE) & Locally Weighted Regression",
+                  timestamp: "42:50",
+                  start_seconds: 2570,
+                  deep_link: "https://www.youtube.com/watch?v=4b4MUYve_U8&t=2570s",
+                  summary: "Proves OLS = MLE under Gaussian noise and derives non-parametric Locally Weighted Regression.",
+                  what_is_taught: "Models y^(i) = θ^T x^(i) + ε^(i) with ε^(i) ~ N(0, σ^2) to show argmax l(θ) = argmin J(θ). Then introduces local distance weights w^(i) = exp(-(x^(i)-x)^2/(2τ^2)).",
+                  takeaways: [
+                    "Optimal θ_MLE is independent of noise variance σ^2.",
+                    "LWR is non-parametric: inference requires keeping all m training points in memory."
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            video_id: "het9HFqo1TQ",
+            url: "https://www.youtube.com/watch?v=het9HFqo1TQ",
+            title: "Lecture 3 — Logistic Regression, Newton's Method & Generalized Linear Models (GLMs)",
+            channel_title: "Stanford Online",
+            duration_seconds: 4725,
+            duration_formatted: "1:18:45",
+            duration_human: "1h 18m 45s",
+            transcript_status: "English (Full Lecture Transcript Analyzed)",
+            transcript_word_count: 11850,
+            summary: {
+              executive_summary: "Demonstrates why linear regression fails on classification, introduces Logistic Regression via the sigmoid function g(z) = 1/(1+e^(-z)), derives the log-likelihood gradient ascent rule, presents Newton's Method (Fisher Scoring) using the Hessian matrix, and unifies regression and classification under Exponential Family Generalized Linear Models (GLMs).",
+              key_takeaways: [
+                "Why Not Linear Regression for Classification? Far-away easy outliers skew the linear regression line and shift the 0.5 threshold, plus predictions h_θ(x) can fall outside [0, 1].",
+                "Sigmoid Derivative Identity: g'(z) = g(z)(1 - g(z)), which simplifies the Bernoulli log-likelihood derivative to ∂l/∂θ_j = (y - h_θ(x)) x_j.",
+                "Newton's Method (θ := θ - H^(-1) ∇_θ l(θ)): Uses curvature (second derivatives) to achieve quadratic convergence (~5–10 iterations), doubling significant digits of accuracy each step.",
+                "3-Assumption GLM Blueprint: (1) y | x; θ ~ ExponentialFamily(η), (2) predict E[T(y)|x], (3) natural parameter is linear: η = θ^T x."
+              ],
+              action_items: [
+                "Prove g'(z) = g(z)(1 - g(z)) from g(z) = (1 + e^(-z))^(-1) and use it to derive ∂l(θ)/∂θ_j.",
+                "Write down the exponential family parameters b(y), T(y), η, and a(η) for both Bernoulli and Gaussian distributions."
+              ],
+              lecture_notes: {
+                core_concepts_taught: [
+                  {
+                    concept: "Logistic Regression & Bernoulli Log-Likelihood Derivation",
+                    timestamp: "00:00",
+                    start_seconds: 0,
+                    explanation: "For binary classification y ∈ {0, 1}, we bound our hypothesis in [0, 1] using the logistic sigmoid g(z) = 1 / (1 + e^(-z)), so h_θ(x) = g(θ^T x) = P(y=1 | x; θ). Since P(y=1|x;θ) = h_θ(x) and P(y=0|x;θ) = 1 - h_θ(x), we write compactly: p(y | x; θ) = (h_θ(x))^y (1 - h_θ(x))^(1-y). Taking the log-likelihood over m examples gives l(θ) = Σ_{i=1}^m [y^(i) log h_θ(x^(i)) + (1 - y^(i)) log(1 - h_θ(x^(i)))]. Using g'(z) = g(z)(1-g(z)), differentiating l(θ) gives ∂l/∂θ_j = Σ_{i=1}^m (y^(i) - h_θ(x^(i))) x_j^(i).",
+                    key_points: [
+                      "Because we MAXIMIZE log-likelihood l(θ), we use Gradient Ascent: θ_j := θ_j + α (y^(i) - h_θ(x^(i))) x_j^(i) (which is identical to minimizing Binary Cross-Entropy loss!).",
+                      "Even though the update rule looks identical to LMS, h_θ(x) = 1/(1+e^(-θ^T x)) is non-linear, so it is a different algorithm."
+                    ]
+                  },
+                  {
+                    concept: "Newton's Method (Newton-Raphson) for Maximum Likelihood",
+                    timestamp: "25:40",
+                    start_seconds: 1540,
+                    explanation: "To maximize l(θ), we want to find the root where the first derivative l'(θ) = 0. In 1D, Newton's method approximates l'(θ) by its tangent line at θ^(t) and steps to where that tangent hits zero: θ^(t+1) = θ^(t) - l'(θ^(t)) / l''(θ^(t)). In n dimensions, this generalizes to θ^(t+1) = θ^(t) - H^(-1) ∇_θ l(θ), where H ∈ R^((n+1)×(n+1)) is the Hessian matrix of second partial derivatives H_jk = ∂^2 l(θ) / (∂θ_j ∂θ_k).",
+                    key_points: [
+                      "Quadratic convergence: If error is 0.01 on step t, it becomes ~0.0001 on step t+1 and ~10^(-8) on step t+2.",
+                      "Trade-off: Converges in ~5–10 steps, but inverting the (n+1)×(n+1) Hessian costs O(n^3) per step—great when n ≤ 1,000, too slow when n = 100,000."
+                    ]
+                  },
+                  {
+                    concept: "Exponential Family & Generalized Linear Models (GLMs)",
+                    timestamp: "45:10",
+                    start_seconds: 2710,
+                    explanation: "A family of distributions belongs to the Exponential Family if its density can be written as p(y; η) = b(y) exp(η^T T(y) - a(η)), where η is the natural (canonical) parameter, T(y) is the sufficient statistic (usually T(y) = y), and a(η) is the log-partition function. For Bernoulli(φ): p(y; φ) = φ^y (1-φ)^(1-y) = exp(y log(φ/(1-φ)) + log(1-φ)). Matching terms reveals η = log(φ/(1-φ)) (the log-odds!), and solving for φ gives φ = 1 / (1 + e^(-η))—which is where the logistic sigmoid comes from! Setting η = θ^T x automatically constructs a GLM.",
+                    key_points: [
+                      "Gaussian N(μ, 1) in Exponential Family has b(y) = (1/√(2π))exp(-y^2/2), T(y) = y, η = μ, a(η) = η^2/2 → yields Linear Regression.",
+                      "Multinomial over k classes in Exponential Family → yields Softmax Regression (Cross-Entropy loss)."
+                    ]
+                  }
+                ],
+                formulas_and_algorithms: [
+                  {
+                    name: "Logistic Sigmoid & Its Derivative",
+                    expression: "g(z) = 1 / (1 + e^(-z)),     g'(z) = g(z)(1 - g(z))",
+                    when_to_use: "Binary classification probability modeling and backpropagation derivations.",
+                    explanation: "Maps any real number z ∈ (-∞, +∞) smoothly into a valid probability (0, 1)."
+                  },
+                  {
+                    name: "Bernoulli Log-Likelihood (Negative Binary Cross-Entropy)",
+                    expression: "l(θ) = Σ_{i=1}^m [ y^(i) log h_θ(x^(i)) + (1 - y^(i)) log(1 - h_θ(x^(i))) ]",
+                    when_to_use: "Objective function maximized in Logistic Regression.",
+                    explanation: "Strictly concave in θ, guaranteeing a unique global maximum."
+                  },
+                  {
+                    name: "Multidimensional Newton-Raphson Update",
+                    expression: "θ := θ - H^(-1) ∇_θ l(θ),    where H_jk = ∂^2 l(θ) / (∂θ_j ∂θ_k)",
+                    when_to_use: "Fast second-order optimization of Logistic Regression / GLMs when feature count n is small.",
+                    explanation: "Also known as Fisher Scoring or Iteratively Reweighted Least Squares (IRLS)."
+                  },
+                  {
+                    name: "Exponential Family Canonical Form",
+                    expression: "p(y; η) = b(y) exp( η^T T(y) - a(η) ),    E[T(y)] = ∂a(η)/∂η,   Var[T(y)] = ∂^2 a(η)/∂η^2",
+                    when_to_use: "Deriving any GLM (Linear, Logistic, Poisson, Gamma, Softmax) from a probability distribution.",
+                    explanation: "Setting η = θ^T x gives the canonical prediction h_θ(x) = E[y|x; θ] = ∂a(η)/∂η."
+                  }
+                ],
+                worked_examples: [
+                  {
+                    title: "Deriving the Logistic Sigmoid from Bernoulli Exponential Family",
+                    timestamp: "50:20",
+                    problem: "Write Bernoulli(φ) in exponential family form p(y; η) = b(y)exp(ηT(y) - a(η)) and find the canonical response function g(η) = E[y; η].",
+                    step_by_step_solution: "1. Start with p(y; φ) = φ^y (1-φ)^(1-y). 2. Take exp(log(...)): = exp(y log φ + (1-y) log(1-φ)) = exp(y log(φ/(1-φ)) + log(1-φ)). 3. Identify T(y) = y, b(y) = 1, natural parameter η = log(φ/(1-φ)), and a(η) = -log(1-φ). 4. Invert η = log(φ/(1-φ)) → e^η = φ/(1-φ) → φ = e^η / (1 + e^η) = 1 / (1 + e^(-η)). 5. Under GLM assumption η = θ^T x, h_θ(x) = E[y|x] = φ = 1 / (1 + e^(-θ^T x))."
+                  }
+                ],
+                comparison_table: [
+                  {
+                    aspect: "Gradient Ascent vs. Newton's Method",
+                    approach_a: "Gradient Ascent: First-order; O(m·n) per step; needs hundreds of iterations & α tuning",
+                    approach_b: "Newton's Method: Second-order; O(m·n^2 + n^3) per step; converges in 5–10 steps with no α",
+                    verdict: "Use Newton's Method (IRLS/L-BFGS) when n ≤ 1,000; use SGD/Adam when n is large."
+                  },
+                  {
+                    aspect: "Linear Regression vs. Logistic Regression GLM",
+                    approach_a: "Gaussian Exponential Family: η = μ, canonical link is Identity h_θ(x) = θ^T x",
+                    approach_b: "Bernoulli Exponential Family: η = log(φ/(1-φ)), canonical link is Sigmoid 1/(1+e^(-θ^T x))",
+                    verdict: "Both share ∂l/∂θ_j = (y - h_θ(x))x_j because this identity holds for all canonical GLMs."
+                  }
+                ]
+              },
+              exam_prep: {
+                cheat_sheet_points: [
+                  "Sigmoid properties: g(0) = 0.5, g(-z) = 1 - g(z), and g'(z) = g(z)(1 - g(z)).",
+                  "Decision boundary of Logistic Regression is the linear hyperplane θ^T x = 0 (since g(0) = 0.5).",
+                  "For ANY Exponential Family distribution p(y; η) = b(y)exp(ηT(y) - a(η)), the mean is E[T(y)] = a'(η) and the variance is Var(T(y)) = a''(η) > 0, which proves a(η) is always convex and log-likelihood l(θ) is always concave!",
+                  "Hessian of Logistic Regression: H = - Σ_{i=1}^m h_θ(x^(i))(1 - h_θ(x^(i))) x^(i) (x^(i))^T, which is negative semi-definite."
+                ],
+                common_exam_traps: [
+                  "Trap 1 (Using Squared Error with Sigmoid): Minimizing 1/2 Σ(sigmoid(θ^T x) - y)^2 produces a NON-CONVEX cost surface full of flat plateaus and local minima! Always use Bernoulli log-likelihood (Cross-Entropy) with sigmoid.",
+                  "Trap 2 (Sign Error in Newton's Update): Whether maximizing l(θ) or minimizing J(θ), Newton's update is ALWAYS θ := θ - H^(-1) ∇f(θ) because for maximization H is negative definite, so -H^(-1) moves uphill."
+                ],
+                exam_questions: [
+                  {
+                    question: "Suppose y | x; θ ~ Poisson(λ) where p(y; λ) = (λ^y e^(-λ)) / y!. Show that the Poisson distribution is in the Exponential Family, find the natural parameter η, and derive the GLM hypothesis h_θ(x) for Poisson Regression.",
+                    difficulty: "Hard (Classic CS229 Midterm Problem)",
+                    model_answer: "Step 1: Rewrite p(y; λ) = (1 / y!) exp(y log λ - λ). Step 2: Match with b(y) exp(η T(y) - a(η)): b(y) = 1/y!, T(y) = y, natural parameter η = log λ (so λ = e^η), and a(η) = λ = e^η. Step 3: Under the GLM assumption η = θ^T x, the hypothesis is h_θ(x) = E[y | x; θ] = λ = e^η = exp(θ^T x)."
+                  }
+                ]
+              },
+              interview_prep: {
+                interview_questions: [
+                  {
+                    question: "Why don't we use Mean Squared Error (MSE) as the loss function for Logistic Regression?",
+                    topic_tag: "ML Fundamentals & Loss Functions",
+                    elevator_pitch_30s: "Two reasons: First, passing a sigmoid through MSE makes the loss surface non-convex with flat saturation plateaus where gradients vanish. Second, Binary Cross-Entropy is the exact negative log-likelihood of a Bernoulli distribution, which stays strictly convex and cancels the sigmoid derivative term to keep gradients proportional to error (h_θ(x) - y).",
+                    deep_dive_answer: "With MSE, ∂J/∂θ_j = (h - y) · h(1 - h) · x_j. If the model is confidently wrong (say y = 1 but h_θ(x) = 0.0001), the factor h(1-h) ≈ 0.0001 crushes the gradient, causing learning to stall! With Cross-Entropy, the 1/[h(1-h)] from the log derivative cancels h(1-h) from g'(z), leaving a strong gradient (h - y)·x_j.",
+                    follow_up_tradeoffs: "Mention that Logistic Regression outputs well-calibrated probabilities because Cross-Entropy is a strictly proper scoring rule, unlike Hinge Loss (SVMs)."
+                  }
+                ],
+                flashcards: [
+                  {
+                    front: "What is the derivative g'(z) of the sigmoid function g(z) = 1 / (1 + e^(-z))?",
+                    back: "g'(z) = g(z) · (1 - g(z))",
+                    tag: "Formula"
+                  },
+                  {
+                    front: "What is the natural parameter η when Bernoulli(φ) is written in Exponential Family form?",
+                    back: "η = log( φ / (1 - φ) )  (the log-odds or logit)",
+                    tag: "GLM Theory"
+                  },
+                  {
+                    front: "What is the GLM hypothesis h_θ(x) when the response variable y follows a Poisson(λ) distribution?",
+                    back: "h_θ(x) = exp(θ^T x)",
+                    tag: "Exam Classic"
+                  }
+                ]
+              },
+              chapters: [
+                {
+                  chapter_number: 1,
+                  title: "Logistic Regression & Bernoulli Log-Likelihood",
+                  timestamp: "00:00",
+                  start_seconds: 0,
+                  deep_link: "https://www.youtube.com/watch?v=het9HFqo1TQ&t=0s",
+                  summary: "Introduces sigmoid hypothesis h_θ(x) = 1/(1+e^(-θ^T x)) and derives stochastic gradient ascent.",
+                  what_is_taught: "Shows why linear regression fails on binary classification, defines sigmoid g(z), writes Bernoulli likelihood p(y|x;θ) = h^y(1-h)^(1-y), and differentiates log-likelihood l(θ).",
+                  takeaways: [
+                    "Decision boundary is θ^T x = 0.",
+                    "Gradient ascent update: θ_j := θ_j + α (y - h_θ(x)) x_j."
+                  ]
+                },
+                {
+                  chapter_number: 2,
+                  title: "Newton's Method & Hessian Matrix Optimization",
+                  timestamp: "25:40",
+                  start_seconds: 1540,
+                  deep_link: "https://www.youtube.com/watch?v=het9HFqo1TQ&t=1540s",
+                  summary: "Derives θ := θ - H^(-1) ∇_θ l(θ) with quadratic convergence.",
+                  what_is_taught: "Finds zeros of l'(θ) = 0 via tangent approximations and generalizes to the n × n Hessian matrix H.",
+                  takeaways: [
+                    "Quadratic convergence doubles accurate digits each step.",
+                    "Requires O(n^3) Hessian inversion per iteration."
+                  ]
+                },
+                {
+                  chapter_number: 3,
+                  title: "Exponential Family & Generalized Linear Models (GLMs)",
+                  timestamp: "45:10",
+                  start_seconds: 2710,
+                  deep_link: "https://www.youtube.com/watch?v=het9HFqo1TQ&t=2710s",
+                  summary: "Unifies Linear, Logistic, Poisson, and Softmax regression under p(y; η) = b(y)exp(ηT(y) - a(η)).",
+                  what_is_taught: "Proves how Bernoulli and Gaussian fit the exponential family and how setting η = θ^T x automatically produces the canonical link function.",
+                  takeaways: [
+                    "Mean E[T(y)] = ∂a(η)/∂η; Variance Var[T(y)] = ∂^2 a(η)/∂η^2.",
+                    "Multinomial distribution over k classes yields Softmax Regression."
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      },
+
+      karpathy_video: {
+        kind: "video",
+        video: {
+          video_id: "7xTGNNLPyMI",
+          url: "https://www.youtube.com/watch?v=7xTGNNLPyMI",
+          title: "Deep Dive into LLMs like ChatGPT — Andrej Karpathy (Complete Study & Interview Guide)",
+          channel_title: "Andrej Karpathy",
+          duration_seconds: 12660,
+          duration_formatted: "3:31:00",
+          duration_human: "3h 31m 00s",
+          transcript_status: "English (Full Lecture Transcript Analyzed)",
+          transcript_word_count: 31200,
+          summary: {
+            executive_summary: "Andrej Karpathy teaches the complete three-stage engineering pipeline used to train frontier Large Language Models: (1) Pretraining on 15+ trillion filtered web tokens (FineWeb) using Byte-Pair Encoding (BPE) tokenization and Transformer next-token prediction to build a base model; (2) Supervised Fine-Tuning (SFT) on formatted `<|im_start|>` assistant conversations; and (3) Reinforcement Learning (RLHF for human preference alignment and verifiable RL for emergent chain-of-thought reasoning).",
+            key_takeaways: [
+              "Three-Stage Training Pipeline: Pretraining builds a high-compute internet document simulator (Base Model); SFT imitates human assistant dialogues; RL discovers reasoning strategies via trial-and-error.",
+              "Tokenization (BPE) Trade-off: Compresses raw UTF-8 byte streams into ~100,000 discrete subword tokens (~4 chars or 0.75 words per token) so Transformers can attend over longer contexts.",
+              "Weights vs. Context Window Psychology: Parametric knowledge stored in model weights is a lossy, vague recollection of training text; tokens placed directly inside the context window act as crisp working memory.",
+              "Verifiable RL vs. RLHF: RL on verifiable math/code domains can run indefinitely to discover emergent self-correction ('aha moments'), whereas RLHF against a learned neural Reward Model must be stopped early to prevent reward hacking."
+            ],
+            action_items: [
+              "Compare GPT-4 tokenization (`cl100k_base` / `o200k_base`) on numbers, code indentation, and non-English text.",
+              "Practice explaining the exact difference between Base Models, SFT Models, RLHF Models, and Reasoning (RL) Models for AI/ML interviews."
+            ],
+            lecture_notes: {
+              core_concepts_taught: [
+                {
+                  concept: "Stage 1A: Pretraining Data Curation (Common Crawl → FineWeb)",
+                  timestamp: "01:30",
+                  start_seconds: 90,
+                  explanation: "Raw internet dumps like Common Crawl contain billions of pages infested with spam, ad links, boilerplate HTML, and PII. Pretraining pipelines (like HuggingFace's FineWeb, 15 trillion tokens / ~44 TB of clean text) apply sequential filters: URL blocklisting (adult/spam domains),Trafilatura DOM text extraction (stripping navbars/CSS), FastText language filtering (≥65% English confidence), MinHash deduplication, quality heuristics (removing pages without punctuation or with excessive duplicate lines), and PII scrubbing.",
+                  key_points: [
+                    "High-quality pretraining corpora prioritize educational, code, and technical text.",
+                    "Pretraining consumes ~95%+ of total compute budget (thousands of H100 GPUs running for weeks/months)."
+                  ]
+                },
+                {
+                  concept: "Stage 1B: Byte-Pair Encoding (BPE) Tokenization",
+                  timestamp: "14:15",
+                  start_seconds: 855,
+                  explanation: "Neural networks cannot ingest raw strings; they require sequences of discrete token IDs from a finite vocabulary V (e.g., V = 100,277 in GPT-4). Raw UTF-8 bytes have a tiny vocabulary of 256, which makes sequences 4x–5x too long for Transformer O(T^2) attention. BPE iteratively merges the most frequent adjacent byte/token pairs until reaching ~100k tokens. Common words (' the') become 1 token; rare words or numbers split into subword chunks.",
+                  key_points: [
+                    "Leading spaces matter: `'hello'`, `' hello'`, and `'HELLO'` map to completely different integer token IDs.",
+                    "Tokenization is why LLMs struggle with character-level tasks (like counting 'r's in 'strawberry' or reversing strings)—the model only sees whole token IDs, not individual letters!"
+                  ]
+                },
+                {
+                  concept: "Stage 2: Supervised Fine-Tuning (SFT) & Hallucination Mitigation",
+                  timestamp: "59:20",
+                  start_seconds: 3560,
+                  explanation: "A pretrained Base Model (like Llama-3-405B-Base) is NOT an assistant; if you ask it 'What is 2+2?', it might autocomplete a list of quiz questions. SFT keeps the exact same next-token cross-entropy objective and Transformer architecture, but swaps the dataset to ~100k–1M high-quality multi-turn conversations formatted with special control tokens (`<|im_start|>user...<|im_end|><|im_start|>assistant...`). Why do SFT models hallucinate? If a human labeler writes a confident factual answer about an entity the base model never saw in pretraining, SFT teaches the model to guess confidently even when its internal parametric features are uncertain!",
+                  key_points: [
+                    "Mitigation #1 (Abstention Calibration): Interrogate what the base model actually knows and train SFT targets to say 'I don't know' on unknown entities.",
+                    "Mitigation #2 (Search/RAG Tool Use): Teach the model to emit special search tokens, fetch external documents into the context window (working memory), and ground its answer."
+                  ]
+                },
+                {
+                  concept: "Stage 3: Reinforcement Learning (Verifiable RL vs. RLHF)",
+                  timestamp: "02:01:10",
+                  start_seconds: 7270,
+                  explanation: "In SFT, the model only imitates human demonstrations—it never learns what works best for its own cognitive token budget. In Verifiable RL (used in DeepSeek-R1 and OpenAI o1/o3), the model generates 16+ candidate chain-of-thought rollouts for a math/code problem, checks the final answer against a deterministic verifier (unit tests / symbolic solver), and updates weights to increase the log-probability of successful reasoning trajectories. The model spontaneously discovers backtracking, self-verification, and re-reading problem constraints. In unverifiable domains (creative writing, summarization), RLHF trains a separate neural Reward Model on human pairwise rankings (Bradley-Terry loss) and optimizes via PPO/GRPO.",
+                  key_points: [
+                    "Why RLHF cannot run forever: The Reward Model is an imperfect neural network with out-of-distribution blind spots; over-optimizing against it causes 'reward hacking' (e.g., outputting gibberish tokens like 'the the the' that trick the reward model into giving a maximal score).",
+                    "Compute-optimal scaling has shifted from pure pretraining scaling to test-time RL thinking tokens."
+                  ]
+                }
+              ],
+              formulas_and_algorithms: [
+                {
+                  name: "Autoregressive Next-Token Cross-Entropy Loss",
+                  expression: "L(θ) = - Σ_{t=1}^T log P_θ( x_t | x_1, x_2, ..., x_{t-1} )",
+                  when_to_use: "Objective function used during BOTH Stage 1 (Pretraining) and Stage 2 (Supervised Fine-Tuning).",
+                  explanation: "At every token position t, the Transformer outputs logits over all |V| ≈ 100k tokens, applies Softmax, and maximizes the log-probability of the true next token x_t."
+                },
+                {
+                  name: "Bradley-Terry Pairwise Reward Model Loss (RLHF)",
+                  expression: "L_RM(φ) = - E[ log σ( r_φ(x, y_win) - r_φ(x, y_lose) ) ]",
+                  when_to_use: "Training a Reward Model from human A/B preference rankings when no deterministic verifier exists.",
+                  explanation: "Pushes the scalar reward score r_φ of the human-preferred completion y_win higher than the rejected completion y_lose."
+                }
+              ],
+              worked_examples: [
+                {
+                  title: "Why LLMs Fail at 'How many r's in strawberry?' & Mental Arithmetic",
+                  timestamp: "01:36:40",
+                  problem: "Why does a frontier LLM sometimes fail to count letters in 'strawberry' or multiply 4-digit numbers in its head, yet solve PhD-level physics?",
+                  step_by_step_solution: "1. Tokenization hides characters: 'strawberry' is split into 2–3 token IDs (e.g. `['str', 'aw', 'berry']`), so the model must recall character spelling purely from weights. 2. Fixed compute per forward pass: A single token emission has a fixed O(L) layer budget; complex arithmetic requires intermediate scratchpad tokens (Chain-of-Thought) or delegating to a Python code interpreter."
+                }
+              ],
+              comparison_table: [
+                {
+                  aspect: "Pretraining vs. SFT vs. RL",
+                  approach_a: "Pretraining (15T tokens, $10M+): Learns world knowledge & language syntax",
+                  approach_b: "SFT (1M conversations) & RL (Rollouts): Aligns assistant behavior & discovers reasoning chains",
+                  verdict: "All three stages are essential: Pretraining provides knowledge capacity; SFT/RL unlocks usability and reasoning."
+                },
+                {
+                  aspect: "Verifiable RL (RLVR) vs. RLHF",
+                  approach_a: "Verifiable RL: Exact math/code ground-truth verifier; immune to reward hacking; enables o1/R1 reasoning",
+                  approach_b: "RLHF: Learned neural Reward Model; works on open-ended writing; prone to reward hacking after ~1000 steps",
+                  verdict: "Use Verifiable RL whenever an objective programmatic grader exists; use RLHF for tone/style alignment."
+                }
+              ]
+            },
+            exam_prep: {
+              cheat_sheet_points: [
+                "Pretraining and SFT use the EXACT same mathematical algorithm (next-token cross-entropy loss); only the dataset changes from web documents to formatted chat transcripts.",
+                "BPE Tokenization balances vocabulary size (~100k) against sequence length (~0.75 words/token) to keep self-attention tractable.",
+                "Context Window = Crisp Working Memory (direct attention over tokens); Model Weights = Lossy Compression of the internet.",
+                "Reward Hacking occurs in RLHF because the policy exploits adversarial out-of-distribution inputs of the neural Reward Model."
+              ],
+              common_exam_traps: [
+                "Trap 1: Thinking SFT teaches the model vast new factual encyclopedic knowledge. Factual capacity comes almost entirely from Pretraining; SFT teaches format, style, and behavioral alignment.",
+                "Trap 2: Confusing RLHF with true RL reasoning (like AlphaGo/DeepSeek-R1). RLHF optimizes against a proxy neural network (capped upside), whereas RL against a true verifier can surpass human demonstrations."
+              ],
+              exam_questions: [
+                {
+                  question: "Explain the psychological and architectural root cause of hallucinations in SFT models and describe two concrete training-time solutions taught in the lecture.",
+                  difficulty: "Medium-Hard",
+                  model_answer: "Root Cause: During SFT, human contractors write factually accurate answers for all prompts—even prompts about obscure facts that the pretrained base model does not actually have stored in its weights. Training on these targets forces the model to imitate confident guessing rather than conditioning on its internal uncertainty. Solutions: (1) Knowledge Probing & Abstention Training: Query the model multiple times to test if it knows a fact; if not, set the SFT target to 'I don't know'. (2) Tool-Augmented SFT: Train the model to emit web-search tool tokens so unknown facts are retrieved into the context window working memory."
+                }
+              ]
+            },
+            interview_prep: {
+              interview_questions: [
+                {
+                  question: "Walk me through the 3 stages of training a modern LLM like ChatGPT or DeepSeek-R1, including the dataset size, compute cost, and objective function at each stage.",
+                  topic_tag: "LLM Training Pipeline",
+                  elevator_pitch_30s: "Stage 1 is Pretraining on ~15 trillion filtered web tokens using next-token cross-entropy loss (95%+ of compute, produces a Base document completer). Stage 2 is Supervised Fine-Tuning (SFT) on ~1M curated `<|im_start|>` assistant conversations using the same cross-entropy loss. Stage 3 is Post-Training RL: Verifiable RL on math/code for chain-of-thought reasoning plus RLHF (PPO/DPO) for human preference alignment.",
+                  deep_dive_answer: "Explain how FineWeb filters Common Crawl, how BPE tokenizes text into ~100k token IDs, how SFT masks user prompt tokens if only training on assistant completions, and why RL rollouts shift probability mass toward high-reward reasoning chains.",
+                  follow_up_tradeoffs: "If asked 'When would you use RAG vs. Fine-Tuning in production?', state clearly: Use RAG (context window working memory) for injecting new/updated factual data; use SFT/Fine-Tuning for changing output format, tone, or domain-specific reasoning patterns."
+                },
+                {
+                  question: "What is Reward Hacking in RLHF, why does it happen, and why doesn't it happen in DeepSeek-R1 / o1 math training?",
+                  topic_tag: "RLHF & Alignment",
+                  elevator_pitch_30s: "In RLHF, the reward function is a learned neural network (the Reward Model). Because neural networks are vulnerable to adversarial examples, the RL policy eventually discovers nonsensical token sequences that score artificially high on the Reward Model. In math/code RL, the verifier is a deterministic ground-truth test or compiler that cannot be gamed.",
+                  deep_dive_answer: "To mitigate reward hacking in RLHF, we add a KL-divergence penalty β · D_KL(π_θ || π_SFT) to prevent the policy from drifting too far from the SFT reference model, and we apply early stopping.",
+                  follow_up_tradeoffs: "DPO (Direct Preference Optimization) bypasses training a separate Reward Model altogether by optimizing the Bradley-Terry objective directly on the policy's log-probabilities."
+                }
+              ],
+              flashcards: [
+                {
+                  front: "Why do LLMs use Byte-Pair Encoding (BPE) instead of raw UTF-8 characters or bytes?",
+                  back: "Raw bytes (vocab 256) make sequence lengths 4–5x longer, blowing up Transformer O(T^2) attention compute and shrinking effective context length.",
+                  tag: "Tokenization"
+                },
+                {
+                  front: "What is the difference between knowledge in Model Weights vs. knowledge in the Context Window?",
+                  back: "Weights store a lossy, compressed recollection of pretraining data; the Context Window acts as crisp, directly accessible working memory (which is why RAG works so well).",
+                  tag: "Architecture"
+                },
+                {
+                  front: "Why must RLHF training against a Reward Model be stopped early?",
+                  back: "Because the Reward Model is a proxy neural network; over-optimizing against it causes Reward Hacking (adversarial gibberish completions that fool the Reward Model).",
+                  tag: "RLHF"
+                }
+              ]
+            },
+            chapters: [
+              {
+                chapter_number: 1,
+                title: "Stage 1: Pretraining Pipeline, FineWeb & BPE Tokenization",
+                timestamp: "00:00",
+                start_seconds: 0,
+                deep_link: "https://www.youtube.com/watch?v=7xTGNNLPyMI&t=0s",
+                summary: "Covers Common Crawl filtering into FineWeb (15T tokens) and Byte-Pair Encoding into ~100k tokens.",
+                what_is_taught: "Walks through URL filtering, HTML text extraction, language filtering, deduplication, and PII removal, then shows how BPE merges frequent byte pairs into subword tokens.",
+                takeaways: [
+                  "FineWeb contains 15 trillion clean tokens (~44 TB of text).",
+                  "BPE vocabulary size is ~100k tokens in GPT-4 (`cl100k_base`)."
+                ]
+              },
+              {
+                chapter_number: 2,
+                title: "Stage 2: Supervised Fine-Tuning (SFT), Hallucinations & Tool Use",
+                timestamp: "59:20",
+                start_seconds: 3560,
+                deep_link: "https://www.youtube.com/watch?v=7xTGNNLPyMI&t=3560s",
+                summary: "Shows how chat templates turn Base models into Assistants and how RAG/tool use prevents hallucinations.",
+                what_is_taught: "Explains `<|im_start|>` special tokens, why forcing SFT models to answer unknown facts induces hallucinations, and why context window tokens act as working memory.",
+                takeaways: [
+                  "Base models are document completers; SFT models are conversational assistants.",
+                  "Use RAG/search tools to load verified facts into the context window."
+                ]
+              },
+              {
+                chapter_number: 3,
+                title: "Stage 3: Verifiable RL (Reasoning Models) vs. RLHF",
+                timestamp: "02:01:10",
+                start_seconds: 7270,
+                deep_link: "https://www.youtube.com/watch?v=7xTGNNLPyMI&t=7270s",
+                summary: "Contrasts trial-and-error RL on verifiable math/code with human preference RLHF.",
+                what_is_taught: "Demonstrates how RL rollouts discover chain-of-thought backtracking ('aha moments') in DeepSeek-R1/o1, and explains Bradley-Terry Reward Models and reward hacking in RLHF.",
+                takeaways: [
+                  "Verifiable RL learns test-time thinking strategies beyond human imitation.",
+                  "RLHF aligns style/safety on unverifiable tasks but is vulnerable to reward hacking."
+                ]
+              }
+            ]
+          }
+        }
+      }
+    };
+
+
+    // -----------------------------------------------------------------------
+    // Application State (v3.0)
+    // -----------------------------------------------------------------------
+    let currentData = null;
+    let activeVideoIndex = 0;
+    let includedVideoFlags = [];
+    let masteredFlashcards = new Set();
+    let backendOnline = false;
+    let isSummarizingOnDemand = false;
+
+    function getDefaultBackendUrl() {
+      const saved = localStorage.getItem("pulsetube_backend_url");
+      const isCloudHosted = window.location.protocol.startsWith("http") &&
+        window.location.hostname !== "localhost" &&
+        window.location.hostname !== "127.0.0.1";
+      // When deployed on Vercel or any cloud domain, always default to same-origin (`window.location.origin`)
+      if (isCloudHosted && (!saved || saved.includes("localhost") || saved.includes("127.0.0.1"))) {
+        return window.location.origin;
+      }
+      if (saved) return saved;
+      if (window.location.protocol.startsWith("http")) return window.location.origin;
+      return "http://localhost:8000";
+    }
+
+    const appConfig = {
+      backendUrl: getDefaultBackendUrl(),
+      youtubeApiKey: localStorage.getItem("pulsetube_yt_key") || "",
+      llmProvider: localStorage.getItem("pulsetube_llm_provider") || "gemini",
+      llmApiKey: localStorage.getItem("pulsetube_llm_key") || ""
+    };
+
+    // -----------------------------------------------------------------------
+    // Utility Helpers
+    // -----------------------------------------------------------------------
+    function formatSecondsHms(sec) {
+      sec = Math.max(0, Math.round(sec || 0));
+      const h = Math.floor(sec / 3600);
+      const m = Math.floor((sec % 3600) / 60);
+      const s = sec % 60;
+      if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+      return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    }
+
+    function formatSecondsHuman(sec) {
+      sec = Math.max(0, Math.round(sec || 0));
+      const h = Math.floor(sec / 3600);
+      const m = Math.floor((sec % 3600) / 60);
+      const s = sec % 60;
+      const parts = [];
+      if (h > 0) parts.push(`${h}h`);
+      if (m > 0 || h > 0) parts.push(`${m}m`);
+      parts.push(`${s}s`);
+      return parts.join(" ");
+    }
+
+    function computeDurationStatsClient(durationsSec) {
+      const total = durationsSec.reduce((a, b) => a + b, 0);
+      const count = durationsSec.length;
+      const avg = count ? Math.round(total / count) : 0;
+      const shortest = count ? Math.min(...durationsSec) : 0;
+      const longest = count ? Math.max(...durationsSec) : 0;
+      const speeds = {};
+      [1, 1.25, 1.5, 1.75, 2].forEach(sp => {
+        const watchSec = Math.round(total / sp);
+        const savedSec = Math.max(0, total - watchSec);
+        speeds[`${sp}x`] = {
+          speed: sp,
+          watch_seconds: watchSec,
+          watch_formatted: formatSecondsHuman(watchSec),
+          watch_hms: formatSecondsHms(watchSec),
+          saved_seconds: savedSec,
+          saved_formatted: formatSecondsHuman(savedSec)
+        };
+      });
+      const estReadingSec = Math.min(total, count * 120 + 90);
+      return {
+        video_count: count,
+        total_seconds: total,
+        total_formatted: formatSecondsHuman(total),
+        total_hms: formatSecondsHms(total),
+        average_seconds: avg,
+        average_formatted: formatSecondsHuman(avg),
+        shortest_seconds: shortest,
+        shortest_formatted: formatSecondsHuman(shortest),
+        longest_seconds: longest,
+        longest_formatted: formatSecondsHuman(longest),
+        estimated_summary_reading_seconds: estReadingSec,
+        estimated_summary_reading_formatted: formatSecondsHuman(estReadingSec),
+        time_saved_by_reading_formatted: formatSecondsHuman(Math.max(0, total - estReadingSec)),
+        speeds
+      };
+    }
+
+    function parseYoutubeUrlClient(rawUrl) {
+      const str = (rawUrl || "").trim();
+      let videoId = null;
+      let playlistId = null;
+      try {
+        const u = new URL(str);
+        videoId = u.searchParams.get("v");
+        playlistId = u.searchParams.get("list");
+        if (u.hostname.includes("youtu.be")) {
+          videoId = u.pathname.replace(/^\//, "").split("/")[0] || videoId;
+        } else if (u.pathname.includes("/shorts/") || u.pathname.includes("/embed/") || u.pathname.includes("/live/")) {
+          const segs = u.pathname.split("/").filter(Boolean);
+          if (segs.length >= 2) videoId = segs[1];
+        }
+      } catch (e) {
+        if (/^[A-Za-z0-9_-]{11}$/.test(str)) videoId = str;
+        if (/^(PL|UU|LL|FL|OLAK5uy_|RD)[A-Za-z0-9_-]{8,}$/.test(str)) playlistId = str;
+      }
+      const isPlaylist = Boolean(playlistId && (!videoId || str.includes("/playlist")));
+      return { videoId, playlistId, detectedType: isPlaylist ? "playlist" : (videoId ? "video" : "unknown") };
+    }
+
+    async function checkBackendHealth() {
+      const dot = document.getElementById("backendDot");
+      const text = document.getElementById("backendStatusText");
+      try {
+        const res = await fetch(`${appConfig.backendUrl.replace(/\/$/, "")}/api/health`, { method: "GET" });
+        if (res.ok) {
+          const info = await res.json();
+          backendOnline = true;
+          dot.className = "w-2 h-2 rounded-full bg-emerald-400";
+          text.textContent = `FastAPI v${info.version || '3.0'} Connected`;
+          return;
+        }
+      } catch (err) {
+        backendOnline = false;
+      }
+      dot.className = "w-2 h-2 rounded-full bg-indigo-400";
+      text.textContent = "Demo / Standalone Ready";
+    }
+
+    function showStatusBanner(msg, type = "info") {
+      const banner = document.getElementById("statusAlert");
+      banner.classList.remove("hidden", "bg-rose-500/15", "border-rose-500/30", "text-rose-200", "bg-emerald-500/15", "border-emerald-500/30", "text-emerald-200", "bg-indigo-500/15", "border-indigo-500/30", "text-indigo-200", "bg-amber-500/15", "border-amber-500/30", "text-amber-200");
+      if (type === "error") {
+        banner.classList.add("bg-rose-500/15", "border-rose-500/30", "text-rose-200");
+      } else if (type === "success") {
+        banner.classList.add("bg-emerald-500/15", "border-emerald-500/30", "text-emerald-200");
+      } else if (type === "warn") {
+        banner.classList.add("bg-amber-500/15", "border-amber-500/30", "text-amber-200");
+      } else {
+        banner.classList.add("bg-indigo-500/15", "border-indigo-500/30", "text-indigo-200");
+      }
+      banner.textContent = msg;
+    }
+
+    function applyStudyGoalView() {
+      const goal = document.getElementById("studyGoalSelect").value;
+      if (goal === "exam") {
+        switchMainTab("exam");
+      } else if (goal === "interview") {
+        switchMainTab("interview");
+      } else {
+        switchMainTab("notes");
+      }
+    }
+
+    function loadDemoPreset(presetKey) {
+      const preset = JSON.parse(JSON.stringify(DEMO_PRESETS[presetKey]));
+      if (preset.kind === "playlist") {
+        const durs = preset.videos.map(v => v.duration_seconds);
+        preset.duration_stats = computeDurationStatsClient(durs);
+        preset.videos.forEach(v => { v.summary.is_ai_generated = true; v.summary.needs_deep_summary = false; });
+        document.getElementById("youtubeUrlInput").value = preset.playlist.url;
+      } else {
+        preset.duration_stats = computeDurationStatsClient([preset.video.duration_seconds]);
+        preset.video.summary.is_ai_generated = true;
+        preset.video.summary.needs_deep_summary = false;
+        document.getElementById("youtubeUrlInput").value = preset.video.url;
+      }
+      updateDetectedPill();
+      renderAnalyzedPayload(preset);
+      showStatusBanner(`Loaded sample "${preset.kind === 'playlist' ? preset.playlist.title : preset.video.title}".`, "success");
+    }
+
+    function updateDetectedPill() {
+      const val = document.getElementById("youtubeUrlInput").value;
+      const parsed = parseYoutubeUrlClient(val);
+      const pill = document.getElementById("detectedTypePill");
+      if (parsed.videoId && parsed.playlistId) {
+        pill.textContent = "Video + Playlist";
+        pill.className = "absolute right-2.5 px-2 py-1 rounded-md text-[10px] font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30";
+      } else if (parsed.detectedType === "playlist") {
+        pill.textContent = "Playlist";
+        pill.className = "absolute right-2.5 px-2 py-1 rounded-md text-[10px] font-semibold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30";
+      } else if (parsed.detectedType === "video") {
+        pill.textContent = "Single Video";
+        pill.className = "absolute right-2.5 px-2 py-1 rounded-md text-[10px] font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30";
+      } else {
+        pill.textContent = "Enter URL";
+        pill.className = "absolute right-2.5 px-2 py-1 rounded-md text-[10px] font-semibold bg-slate-800 text-slate-400 border border-slate-700";
+      }
+    }
+
+    async function handleAnalyzeUrl() {
+      const rawUrl = document.getElementById("youtubeUrlInput").value.trim();
+      if (!rawUrl) {
+        showStatusBanner("Please enter a valid YouTube Lecture Video or Playlist URL.", "error");
+        return;
+      }
+
+      if (!appConfig.youtubeApiKey && !backendOnline) {
+        if (rawUrl.includes("PLoROMvodv4rMiGQp3WXShtMGgzqpfVfbU") || rawUrl.includes("jGwO_UgTS7I")) {
+          loadDemoPreset("cs229_playlist");
+          return;
+        }
+        if (rawUrl.includes("7xTGNNLPyMI")) {
+          loadDemoPreset("karpathy_video");
+          return;
+        }
+      }
+
+      const btn = document.getElementById("analyzeBtn");
+      const spinner = document.getElementById("analyzeSpinner");
+      const btnText = document.getElementById("analyzeBtnText");
+      spinner.classList.remove("hidden");
+      btnText.textContent = "Analyzing...";
+      btn.disabled = true;
+
+      try {
+        const studyGoal = document.getElementById("studyGoalSelect").value;
+        const urlMode = document.getElementById("urlModeSelect").value;
+
+        const resp = await fetch(`${appConfig.backendUrl.replace(/\/$/, "")}/api/analyze`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            url: rawUrl,
+            mode: urlMode,
+            study_goal: studyGoal,
+            youtube_api_key: appConfig.youtubeApiKey || null,
+            llm_provider: appConfig.llmProvider,
+            llm_api_key: appConfig.llmApiKey || null,
+            max_playlist_videos: 200,
+            initial_deep_summarize_count: 1,
+            summary_depth: "comprehensive"
+          })
+        });
+
+        if (!resp.ok) {
+          const errJson = await resp.json().catch(() => ({}));
+          throw new Error(errJson.detail || "Backend error. Make sure your YouTube Data API v3 Key and Gemini API Key are configured.");
+        }
+
+        const payload = await resp.json();
+        renderAnalyzedPayload(payload);
+
+        const totalVids = payload.kind === "playlist" ? payload.videos.length : 1;
+        if (payload.used_ai_model === false) {
+          showStatusBanner(
+            `Loaded ${totalVids} video(s) with extractive transcript notes. Status: ${payload.llm_status || 'No Gemini/OpenAI Key set'}. Click 'API & Gemini Key Config' (top right) and paste your Gemini API key for full AI exam derivations & interview Q&As!`,
+            "warn"
+          );
+        } else if (payload.kind === "playlist" && totalVids > 1) {
+          showStatusBanner(
+            `Loaded all ${totalVids} videos in the playlist (${payload.duration_stats.total_formatted}), generated Master Course Rollup, and deeply summarized Lecture #1! Click any Lecture (#2–#${totalVids}) to auto-summarize its full transcript on demand.`,
+            "success"
+          );
+        } else {
+          showStatusBanner(
+            `Successfully extracted transcript and generated Deep Study Notes, Formulas, Exam Q&As, and Interview Flashcards (${payload.llm_status || 'AI'})!`,
+            "success"
+          );
+        }
+      } catch (err) {
+        showStatusBanner(err.message || "Failed to analyze lecture URL.", "error");
+      } finally {
+        spinner.classList.add("hidden");
+        btnText.textContent = "Summarize";
+        btn.disabled = false;
+      }
+    }
+
+    // -----------------------------------------------------------------------
+    // On-Demand Per-Lecture & Batch AI Summarization (For 42+ Video Playlists)
+    // -----------------------------------------------------------------------
+    async function summarizeSpecificVideoOnDemand(idx, forceRegenerate = false) {
+      if (!currentData) return;
+      const videos = currentData.kind === "playlist" ? currentData.videos : [currentData.video];
+      const targetVid = videos[idx];
+      if (!targetVid) return;
+
+      if (!forceRegenerate && !targetVid.summary?.needs_deep_summary) {
+        return;
+      }
+
+      if (isSummarizingOnDemand) return;
+      isSummarizingOnDemand = true;
+
+      const loadingBanner = document.getElementById("onDemandLoadingBanner");
+      const loadingTitle = document.getElementById("onDemandLoadingTitle");
+      loadingTitle.textContent = `Summarizing Lecture #${idx + 1}: "${targetVid.title}"...`;
+      loadingBanner.classList.remove("hidden");
+
+      try {
+        const studyGoal = document.getElementById("studyGoalSelect").value;
+        const resp = await fetch(`${appConfig.backendUrl.replace(/\/$/, "")}/api/summarize-video`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            video: {
+              video_id: targetVid.video_id,
+              url: targetVid.url,
+              title: targetVid.title,
+              channel_title: targetVid.channel_title,
+              description: targetVid.description || "",
+              duration_seconds: targetVid.duration_seconds,
+              duration_formatted: targetVid.duration_formatted,
+              duration_human: targetVid.duration_human
+            },
+            study_goal: studyGoal,
+            llm_provider: appConfig.llmProvider,
+            llm_api_key: appConfig.llmApiKey || null,
+            summary_depth: "comprehensive"
+          })
+        });
+
+        if (!resp.ok) {
+          const errJson = await resp.json().catch(() => ({}));
+          throw new Error(errJson.detail || "Failed to summarize video on demand.");
+        }
+
+        const resData = await resp.json();
+        const updatedVideo = resData.video;
+        updatedVideo.playlist_index = idx + 1;
+        updatedVideo.summary.needs_deep_summary = false;
+
+        if (currentData.kind === "playlist") {
+          currentData.videos[idx] = updatedVideo;
+        } else {
+          currentData.video = updatedVideo;
+        }
+
+        // Refresh UI if still viewing this video
+        const refreshedVideos = currentData.kind === "playlist" ? currentData.videos : [currentData.video];
+        renderGlobalLectureSwitcher(refreshedVideos);
+        renderVideoSelectorList(refreshedVideos);
+        renderRollupSection(currentData, refreshedVideos);
+        if (activeVideoIndex === idx) {
+          renderDeepLectureNotesTab(updatedVideo, idx, refreshedVideos.length);
+          renderExamRevisionTab(updatedVideo);
+          renderInterviewPrepTab(updatedVideo);
+          renderChapterCards(updatedVideo, "");
+        }
+
+        if (resData.used_ai_model) {
+          showStatusBanner(`Generated full AI Study Notes, Formulas, Exam Q&A & Interview Flashcards for Lecture #${idx + 1}: "${updatedVideo.title}"!`, "success");
+        } else {
+          showStatusBanner(`Extracted transcript notes for Lecture #${idx + 1} (${resData.llm_status}). Add a Gemini API key in settings for AI synthesis.`, "warn");
+        }
+      } catch (err) {
+        showStatusBanner(err.message || "Error summarizing lecture.", "error");
+      } finally {
+        loadingBanner.classList.add("hidden");
+        isSummarizingOnDemand = false;
+      }
+    }
+
+    async function batchSummarizeNextLectures(batchCount = 3) {
+      if (!currentData || currentData.kind !== "playlist") return;
+      const pendingIndices = [];
+      currentData.videos.forEach((v, idx) => {
+        if (v.summary?.needs_deep_summary && pendingIndices.length < batchCount) {
+          pendingIndices.push(idx);
+        }
+      });
+
+      if (!pendingIndices.length) {
+        showStatusBanner("All lectures in this playlist have already been summarized!", "success");
+        return;
+      }
+
+      for (const idx of pendingIndices) {
+        activeVideoIndex = idx;
+        await summarizeSpecificVideoOnDemand(idx, true);
+      }
+    }
+
+    // -----------------------------------------------------------------------
+    // Rendering Engine
+    // -----------------------------------------------------------------------
+    function renderAnalyzedPayload(data) {
+      currentData = data;
+      masteredFlashcards.clear();
+      const isPlaylist = data.kind === "playlist";
+      const videos = isPlaylist ? data.videos : [data.video];
+      includedVideoFlags = videos.map(() => true);
+      activeVideoIndex = 0;
+
+      document.getElementById("headerKindBadge").textContent = isPlaylist
+        ? `COURSE PLAYLIST (${videos.length} VIDEOS)`
+        : "SINGLE VIDEO LECTURE GUIDE";
+      document.getElementById("headerChannelBadge").textContent = isPlaylist ? data.playlist.channel_title : data.video.channel_title;
+      document.getElementById("headerSourceLink").href = isPlaylist ? data.playlist.url : data.video.url;
+      document.getElementById("headerTitle").textContent = isPlaylist ? data.playlist.title : data.video.title;
+      document.getElementById("headerSubtitle").textContent = isPlaylist
+        ? data.playlist_rollup.master_thesis
+        : data.video.summary.executive_summary;
+
+      const dur = data.duration_stats;
+      document.getElementById("kpiVideoCount").textContent = dur.video_count;
+      document.getElementById("kpiTotalDuration").textContent = dur.total_formatted;
+      document.getElementById("kpiSpeed15").textContent = dur.speeds["1.5x"]?.watch_formatted || dur.total_formatted;
+      document.getElementById("kpiReadTime").textContent = dur.estimated_summary_reading_formatted || "6m 00s";
+
+      renderGlobalLectureSwitcher(videos);
+      renderRollupSection(data, videos);
+      renderVideoSelectorList(videos);
+      selectVideoForInspection(0, false);
+
+      document.getElementById("calcStartIdx").max = videos.length;
+      document.getElementById("calcStartIdx").value = 1;
+      document.getElementById("calcEndIdx").max = videos.length;
+      document.getElementById("calcEndIdx").value = videos.length;
+      renderDurationCalculator(videos);
+
+      applyStudyGoalView();
+    }
+
+    function renderGlobalLectureSwitcher(videos) {
+      const bar = document.getElementById("globalLectureBar");
+      const container = document.getElementById("globalLectureButtons");
+      document.getElementById("playlistTotalCountLabel").textContent = videos.length;
+
+      bar.classList.remove("hidden");
+      container.innerHTML = videos.map((v, idx) => {
+        const active = idx === activeVideoIndex;
+        const isReady = !v.summary?.needs_deep_summary;
+        return `
+          <button
+            onclick="selectVideoForInspection(${idx}, true)"
+            title="${escapeHtml(v.title)} (${escapeHtml(v.duration_formatted)})"
+            class="shrink-0 px-3 py-1.5 rounded-xl text-xs font-semibold border transition flex items-center gap-2 ${
+              active
+                ? 'bg-rose-600 text-white border-rose-500 shadow'
+                : 'bg-slate-950 text-slate-300 border-slate-800 hover:bg-slate-800'
+            }"
+          >
+            <span class="w-2 h-2 rounded-full ${isReady ? 'bg-emerald-400' : 'bg-amber-400'}"></span>
+            <span class="mono">#${idx + 1}</span>
+            <span class="max-w-[180px] truncate">${escapeHtml(v.title)}</span>
+          </button>
+        `;
+      }).join("");
+    }
+
+    function selectVideoForInspection(idx, autoTriggerSummarize = true) {
+      const videos = currentData.kind === "playlist" ? currentData.videos : [currentData.video];
+      activeVideoIndex = Math.max(0, Math.min(idx, videos.length - 1));
+      const vid = videos[activeVideoIndex];
+
+      renderGlobalLectureSwitcher(videos);
+      renderVideoSelectorList(videos);
+      renderDeepLectureNotesTab(vid, activeVideoIndex, videos.length);
+      renderExamRevisionTab(vid);
+      renderInterviewPrepTab(vid);
+
+      document.getElementById("youtubePlayerIframe").src = `https://www.youtube.com/embed/${vid.video_id}?rel=0`;
+      document.getElementById("activePlayerVideoTitle").textContent = vid.title;
+      document.getElementById("activePlayerMeta").textContent = `Duration: ${vid.duration_formatted} • ${vid.transcript_status || 'Transcript Ready'}`;
+      document.getElementById("activePlayerExternalLink").href = vid.url;
+      document.getElementById("chapterSearchInput").value = "";
+      renderChapterCards(vid, "");
+
+      // If this video in a playlist hasn't been deeply summarized yet, auto-trigger `/api/summarize-video`!
+      if (autoTriggerSummarize && vid.summary?.needs_deep_summary && backendOnline) {
+        summarizeSpecificVideoOnDemand(activeVideoIndex, true);
+      }
+    }
+
+    // -----------------------------------------------------------------------
+    // Render Tab 1: Deep Lecture Notes (What's Taught Inside the Video)
+    // -----------------------------------------------------------------------
+    function renderDeepLectureNotesTab(vid, idx, total) {
+      const vsum = vid.summary || {};
+      const notes = vsum.lecture_notes || {};
+
+      document.getElementById("notesVideoBadge").textContent = `Lecture #${idx + 1} of ${total} • ${vid.duration_human}`;
+      const aiBadge = document.getElementById("notesAiModelBadge");
+      if (vsum.is_ai_generated) {
+        aiBadge.textContent = `✓ ${vsum.llm_status || 'AI Deep Study Notes'}`;
+        aiBadge.className = "px-2.5 py-1 rounded-md text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30";
+      } else {
+        aiBadge.textContent = vsum.llm_status || "Transcript / Topic Notes (Click '✨ Deep AI Summarize')";
+        aiBadge.className = "px-2.5 py-1 rounded-md text-xs font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30";
+      }
+
+      document.getElementById("notesTranscriptStatus").textContent = `✓ ${vid.transcript_status || 'Transcript Processed'}${vid.transcript_word_count ? ` (${vid.transcript_word_count.toLocaleString()} words)` : ''}`;
+      document.getElementById("notesVideoTitle").textContent = vid.title;
+      document.getElementById("notesExecSummary").textContent = vsum.executive_summary || "";
+
+      // Key Takeaways List
+      const keyTakeaways = vsum.key_takeaways || [];
+      document.getElementById("notesKeyTakeawaysList").innerHTML = keyTakeaways.map(tk => `
+        <li class="flex items-start gap-2">
+          <span class="text-rose-400 font-bold">•</span>
+          <span>${escapeHtml(tk)}</span>
+        </li>
+      `).join("");
+
+      // Core Concepts Taught
+      const concepts = notes.core_concepts_taught || (vsum.chapters || []).map(ch => ({
+        concept: ch.title,
+        timestamp: ch.timestamp,
+        start_seconds: ch.start_seconds,
+        explanation: ch.what_is_taught || ch.summary,
+        key_points: ch.takeaways || []
+      }));
+
+      document.getElementById("notesCoreConceptsList").innerHTML = concepts.map((c, cIdx) => `
+        <div class="bg-slate-950/90 border border-slate-800/90 rounded-xl p-5 space-y-3 print-card">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div class="flex items-center gap-2.5">
+              <span class="w-6 h-6 rounded-lg bg-rose-500/20 text-rose-300 border border-rose-500/30 text-xs font-bold flex items-center justify-center mono">
+                ${cIdx + 1}
+              </span>
+              <h4 class="text-sm sm:text-base font-bold text-white print-text-dark">${escapeHtml(c.concept)}</h4>
+            </div>
+            ${c.timestamp ? `
+              <a
+                href="https://www.youtube.com/watch?v=${vid.video_id}&t=${c.start_seconds || 0}s"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-rose-500/20 text-rose-300 border border-slate-700 text-xs mono font-semibold transition"
+              >
+                ▶ Taught @ ${escapeHtml(c.timestamp)} ↗
+              </a>
+            ` : ''}
+          </div>
+          <p class="text-xs sm:text-sm text-slate-200 leading-relaxed print-text-dark">${escapeHtml(c.explanation)}</p>
+          ${c.code_example ? `
+            <div class="bg-slate-900 border border-slate-700/80 rounded-xl p-3.5 overflow-x-auto">
+              <div class="text-[10px] font-semibold uppercase tracking-wider text-amber-400 mb-1.5 mono">Code / Implementation Example</div>
+              <pre class="text-xs text-emerald-300 mono leading-relaxed whitespace-pre-wrap print-text-dark"><code>${escapeHtml(c.code_example)}</code></pre>
+            </div>
+          ` : ''}
+          ${(c.key_points && c.key_points.length) ? `
+            <ul class="space-y-1.5 pt-2 border-t border-slate-800/70">
+              ${c.key_points.map(kp => `
+                <li class="text-xs text-slate-300 flex items-start gap-2 print-text-dark">
+                  <span class="text-emerald-400 font-bold">✦</span>
+                  <span>${escapeHtml(kp)}</span>
+                </li>
+              `).join("")}
+            </ul>
+          ` : ''}
+        </div>
+      `).join("");
+
+      const formulas = notes.formulas_and_algorithms || [];
+      document.getElementById("notesFormulasList").innerHTML = formulas.length ? formulas.map(f => `
+        <div class="bg-slate-950/90 border border-slate-800 rounded-xl p-4 space-y-2 print-card">
+          <div class="text-xs font-bold text-amber-300 uppercase tracking-wider">${escapeHtml(f.name)}</div>
+          <div class="bg-slate-900 border border-slate-800 rounded-lg px-3.5 py-2.5 text-xs sm:text-sm text-white mono overflow-x-auto print-text-dark">
+            ${escapeHtml(f.expression)}
+          </div>
+          <div class="text-xs text-slate-300 leading-relaxed print-text-dark">
+            <strong class="text-slate-200">How it works:</strong> ${escapeHtml(f.explanation)}
+          </div>
+          ${f.when_to_use ? `
+            <div class="text-[11px] text-emerald-400 font-medium">
+              ✓ When to apply: ${escapeHtml(f.when_to_use)}
+            </div>
+          ` : ''}
+        </div>
+      `).join("") : `<div class="text-xs text-slate-400">Click '✨ Deep AI Summarize Current Lecture' to extract symbolic formulas and complexity bounds.</div>`;
+
+      const examples = notes.worked_examples || [];
+      document.getElementById("notesExamplesList").innerHTML = examples.length ? examples.map(ex => `
+        <div class="bg-slate-950/90 border border-slate-800 rounded-xl p-4 space-y-2 print-card">
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-xs font-bold text-emerald-300 uppercase tracking-wider">${escapeHtml(ex.title)}</span>
+            ${ex.timestamp ? `<span class="text-xs mono text-slate-400">@ ${escapeHtml(ex.timestamp)}</span>` : ''}
+          </div>
+          <div class="text-xs text-slate-300 print-text-dark">
+            <strong class="text-white print-text-dark">Problem / Scenario:</strong> ${escapeHtml(ex.problem)}
+          </div>
+          <div class="text-xs text-slate-200 leading-relaxed bg-slate-900/80 border border-slate-800/80 rounded-lg p-3 print-text-dark">
+            <strong class="text-emerald-400">Step-by-Step Walkthrough:</strong> ${escapeHtml(ex.step_by_step_solution)}
+          </div>
+        </div>
+      `).join("") : `<div class="text-xs text-slate-400">No worked examples listed.</div>`;
+
+      const comparisons = notes.comparison_table || [];
+      document.getElementById("notesComparisonTableBody").innerHTML = comparisons.length ? comparisons.map(row => `
+        <tr class="hover:bg-slate-800/30">
+          <td class="py-3 px-4 font-semibold text-rose-300 print-text-dark">${escapeHtml(row.aspect)}</td>
+          <td class="py-3 px-4 text-slate-200 print-text-dark">${escapeHtml(row.approach_a)}</td>
+          <td class="py-3 px-4 text-slate-200 print-text-dark">${escapeHtml(row.approach_b)}</td>
+          <td class="py-3 px-4 text-emerald-300 font-medium print-text-dark">${escapeHtml(row.verdict)}</td>
+        </tr>
+      `).join("") : `<tr><td colspan="4" class="py-4 px-4 text-xs text-slate-400">No comparison rows available.</td></tr>`;
+    }
+
+    // -----------------------------------------------------------------------
+    // Render Tab 2: University Exam Revision & Practice Q&A
+    // -----------------------------------------------------------------------
+    function renderExamRevisionTab(vid) {
+      const vsum = vid.summary || {};
+      const exam = vsum.exam_prep || {};
+
+      const cheatPoints = exam.cheat_sheet_points || vsum.key_takeaways || [];
+      document.getElementById("examCheatSheetList").innerHTML = cheatPoints.map(pt => `
+        <li class="flex items-start gap-2.5 bg-slate-950/80 border border-slate-800/80 rounded-xl p-3.5">
+          <span class="text-amber-400 font-bold mt-0.5">★</span>
+          <span class="leading-relaxed">${escapeHtml(pt)}</span>
+        </li>
+      `).join("");
+
+      const traps = exam.common_exam_traps || ["Verify all assumptions and boundary cases before applying formulas."];
+      document.getElementById("examTrapsList").innerHTML = traps.map(tr => `
+        <li class="flex items-start gap-2.5 bg-rose-500/10 border border-rose-500/20 rounded-xl p-3.5">
+          <span class="text-rose-400 font-bold mt-0.5">!</span>
+          <span class="leading-relaxed">${escapeHtml(tr)}</span>
+        </li>
+      `).join("");
+
+      const questions = exam.exam_questions || [];
+      if (!questions.length) {
+        document.getElementById("examQuestionsContainer").innerHTML = `
+          <div class="bg-slate-950/90 border border-slate-800 rounded-xl p-5 text-center space-y-3">
+            <div class="text-sm font-semibold text-slate-200">Exam Q&As have not been generated for this lecture yet.</div>
+            <button onclick="summarizeSpecificVideoOnDemand(activeVideoIndex, true)" class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold shadow cursor-pointer">
+              ✨ Click to Summarize This Lecture Now
+            </button>
+          </div>`;
+        return;
+      }
+      document.getElementById("examQuestionsContainer").innerHTML = questions.map((q, qIdx) => `
+        <div class="bg-slate-950/90 border border-slate-800 rounded-xl p-5 space-y-3 print-card">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <span class="px-2.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-xs font-semibold">
+              Exam Question #${qIdx + 1} • ${escapeHtml(q.difficulty || 'University Exam')}
+            </span>
+            <button
+              onclick="toggleSingleExamAnswer(${qIdx})"
+              class="text-xs font-semibold text-rose-400 hover:text-rose-300 no-print"
+            >
+              Show / Hide Model Solution
+            </button>
+          </div>
+          <h4 class="text-sm sm:text-base font-bold text-white leading-snug print-text-dark">${escapeHtml(q.question)}</h4>
+          <div id="examAnswerBox_${qIdx}" class="bg-slate-900 border border-emerald-500/30 rounded-xl p-4 text-xs sm:text-sm text-slate-200 leading-relaxed space-y-1 print-text-dark">
+            <div class="text-xs font-bold uppercase tracking-wider text-emerald-400 mb-1">✓ Full-Credit Step-by-Step Model Answer</div>
+            <div>${escapeHtml(q.model_answer)}</div>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function toggleSingleExamAnswer(qIdx) {
+      const el = document.getElementById(`examAnswerBox_${qIdx}`);
+      if (el) el.classList.toggle("hidden");
+    }
+
+    function toggleAllExamAnswers(show) {
+      document.querySelectorAll("[id^='examAnswerBox_']").forEach(el => {
+        if (show) el.classList.remove("hidden");
+        else el.classList.add("hidden");
+      });
+    }
+
+    // -----------------------------------------------------------------------
+    // Render Tab 3: Technical Interview Prep & Active-Recall Flashcards
+    // -----------------------------------------------------------------------
+    function renderInterviewPrepTab(vid) {
+      const vsum = vid.summary || {};
+      const interview = vsum.interview_prep || {};
+
+      const iqs = interview.interview_questions || [];
+      if (!iqs.length) {
+        document.getElementById("interviewQuestionsContainer").innerHTML = `
+          <div class="bg-slate-950/90 border border-slate-800 rounded-xl p-5 text-center space-y-3">
+            <div class="text-sm font-semibold text-slate-200">Interview Q&As have not been generated for this lecture yet.</div>
+            <button onclick="summarizeSpecificVideoOnDemand(activeVideoIndex, true)" class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold shadow cursor-pointer">
+              ✨ Click to Summarize This Lecture Now
+            </button>
+          </div>`;
+        document.getElementById("flashcardsGrid").innerHTML = "";
+        return;
+      }
+      document.getElementById("interviewQuestionsContainer").innerHTML = iqs.map((iq, idx) => `
+        <div class="bg-slate-950/90 border border-slate-800 rounded-xl p-5 space-y-3.5 print-card">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <span class="px-2.5 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30 text-xs font-semibold">
+              Interview Q#${idx + 1}
+            </span>
+            <span class="px-2.5 py-0.5 rounded bg-slate-800 text-slate-300 text-xs mono">
+              ${escapeHtml(iq.topic_tag || 'Technical Interview')}
+            </span>
+          </div>
+          <h4 class="text-sm sm:text-base font-bold text-white print-text-dark">"${escapeHtml(iq.question)}"</h4>
+
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-3 pt-1">
+            <div class="bg-emerald-500/10 border border-emerald-500/25 rounded-xl p-3.5 space-y-1">
+              <div class="text-xs font-bold text-emerald-300 uppercase tracking-wider">⚡ 30-Second Elevator Answer</div>
+              <p class="text-xs text-slate-200 leading-relaxed print-text-dark">${escapeHtml(iq.elevator_pitch_30s)}</p>
+            </div>
+            <div class="bg-indigo-500/10 border border-indigo-500/25 rounded-xl p-3.5 space-y-1">
+              <div class="text-xs font-bold text-indigo-300 uppercase tracking-wider">🔍 Technical Deep-Dive</div>
+              <p class="text-xs text-slate-200 leading-relaxed print-text-dark">${escapeHtml(iq.deep_dive_answer)}</p>
+            </div>
+            <div class="bg-amber-500/10 border border-amber-500/25 rounded-xl p-3.5 space-y-1">
+              <div class="text-xs font-bold text-amber-300 uppercase tracking-wider">⚖️ Follow-Up & Trade-Offs</div>
+              <p class="text-xs text-slate-200 leading-relaxed print-text-dark">${escapeHtml(iq.follow_up_tradeoffs)}</p>
+            </div>
+          </div>
+        </div>
+      `).join("");
+
+      const cards = interview.flashcards || [];
+      updateFlashcardProgress(cards.length);
+      document.getElementById("flashcardsGrid").innerHTML = cards.map((fc, idx) => {
+        const key = `${activeVideoIndex}_${idx}`;
+        const isMastered = masteredFlashcards.has(key);
+        return `
+          <div
+            onclick="flipFlashcard(${idx})"
+            class="cursor-pointer bg-slate-950 hover:bg-slate-900 border ${isMastered ? 'border-emerald-500/50' : 'border-slate-800'} rounded-xl p-5 flex flex-col justify-between gap-4 transition select-none print-card"
+          >
+            <div class="space-y-2">
+              <div class="flex items-center justify-between text-[11px]">
+                <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 mono">${escapeHtml(fc.tag || 'Flashcard')}</span>
+                <span id="fcSideLabel_${idx}" class="text-rose-400 font-semibold">QUESTION (Click to Flip)</span>
+              </div>
+              <div id="fcFront_${idx}" class="text-sm font-bold text-white leading-relaxed pt-1 print-text-dark">
+                ${escapeHtml(fc.front)}
+              </div>
+              <div id="fcBack_${idx}" class="hidden text-xs sm:text-sm text-emerald-300 leading-relaxed pt-1 border-t border-slate-800 mt-2 print-text-dark">
+                <strong class="block text-[11px] uppercase text-emerald-400 mb-1">Answer:</strong>
+                ${escapeHtml(fc.back)}
+              </div>
+            </div>
+            <div class="flex items-center justify-between pt-2 border-t border-slate-800/80 text-xs no-print">
+              <span class="text-slate-500">Card #${idx + 1}</span>
+              <button
+                onclick="event.stopPropagation(); toggleMasteredCard('${key}', ${cards.length})"
+                class="px-2.5 py-1 rounded-md text-xs font-semibold ${isMastered ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-slate-800 text-slate-400 hover:text-white'}"
+              >
+                ${isMastered ? '✓ Mastered' : 'Mark Mastered'}
+              </button>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function flipFlashcard(idx) {
+      const back = document.getElementById(`fcBack_${idx}`);
+      const label = document.getElementById(`fcSideLabel_${idx}`);
+      if (!back) return;
+      const isHidden = back.classList.contains("hidden");
+      if (isHidden) {
+        back.classList.remove("hidden");
+        label.textContent = "ANSWER REVEALED";
+        label.className = "text-emerald-400 font-semibold";
+      } else {
+        back.classList.add("hidden");
+        label.textContent = "QUESTION (Click to Flip)";
+        label.className = "text-rose-400 font-semibold";
+      }
+    }
+
+    function toggleMasteredCard(key, totalCards) {
+      if (masteredFlashcards.has(key)) masteredFlashcards.delete(key);
+      else masteredFlashcards.add(key);
+      const videos = currentData.kind === "playlist" ? currentData.videos : [currentData.video];
+      renderInterviewPrepTab(videos[activeVideoIndex]);
+    }
+
+    function updateFlashcardProgress(totalCards) {
+      let count = 0;
+      masteredFlashcards.forEach(k => {
+        if (k.startsWith(`${activeVideoIndex}_`)) count++;
+      });
+      document.getElementById("flashcardProgressBadge").textContent = `${count} / ${totalCards} Cards Mastered`;
+    }
+
+    // -----------------------------------------------------------------------
+    // Render Tab 4 & 5 & 6 (Chapters, All-Video Rollup, Duration Calculator)
+    // -----------------------------------------------------------------------
+    function renderVideoSelectorList(videos) {
+      document.getElementById("selectorCountBadge").textContent = `${videos.length} video${videos.length > 1 ? 's' : ''}`;
+      const listEl = document.getElementById("videoSelectorList");
+      listEl.innerHTML = videos.map((v, idx) => {
+        const isActive = idx === activeVideoIndex;
+        const isReady = !v.summary?.needs_deep_summary;
+        return `
+          <button
+            onclick="selectVideoForInspection(${idx}, true)"
+            class="w-full text-left p-3 rounded-xl border transition flex items-start justify-between gap-3 ${
+              isActive
+                ? 'bg-rose-500/15 border-rose-500/50 text-white'
+                : 'bg-slate-950/80 border-slate-800/80 text-slate-300 hover:bg-slate-800/70'
+            }"
+          >
+            <div class="flex items-start gap-2.5 min-w-0">
+              <span class="px-2 py-0.5 rounded text-xs font-bold mono ${isActive ? 'bg-rose-500 text-white' : 'bg-slate-800 text-slate-400'}">
+                ${idx + 1}
+              </span>
+              <div class="min-w-0">
+                <div class="text-xs font-semibold truncate">${escapeHtml(v.title)}</div>
+                <div class="text-[11px] text-slate-400 mt-0.5">
+                  ${isReady ? '<span class="text-emerald-400">✓ Summarized</span>' : '<span class="text-amber-400">⚡ Click to Summarize</span>'} • ${escapeHtml(v.duration_human)}
+                </div>
+              </div>
+            </div>
+            <span class="text-xs mono text-slate-400 shrink-0">${escapeHtml(v.duration_formatted)}</span>
+          </button>
+        `;
+      }).join("");
+    }
+
+    function filterChapters() {
+      const videos = currentData.kind === "playlist" ? currentData.videos : [currentData.video];
+      const vid = videos[activeVideoIndex];
+      const q = document.getElementById("chapterSearchInput").value.trim().toLowerCase();
+      renderChapterCards(vid, q);
+    }
+
+    function renderChapterCards(vid, query) {
+      const chapters = (vid.summary?.chapters || []).filter(ch => {
+        if (!query) return true;
+        const hay = `${ch.title} ${ch.summary} ${ch.what_is_taught || ""} ${(ch.takeaways || []).join(" ")}`.toLowerCase();
+        return hay.includes(query);
+      });
+
+      const container = document.getElementById("chapterTakeawaysContainer");
+      container.innerHTML = chapters.map(ch => `
+        <div class="bg-slate-950/90 border border-slate-800/90 rounded-xl p-4 space-y-2.5 print-card">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div class="flex items-center gap-2.5">
+              <button
+                onclick="seekEmbeddedPlayer('${vid.video_id}', ${ch.start_seconds || 0})"
+                class="px-2.5 py-1 rounded-lg bg-rose-500/20 hover:bg-rose-500 text-rose-300 hover:text-white border border-rose-500/30 text-xs font-bold mono flex items-center gap-1.5 transition cursor-pointer"
+              >
+                <span>▶</span>
+                <span>${escapeHtml(ch.timestamp)}</span>
+              </button>
+              <h4 class="text-sm font-bold text-white print-text-dark">${escapeHtml(ch.title)}</h4>
+            </div>
+            <a href="${escapeHtml(ch.deep_link)}" target="_blank" rel="noopener noreferrer" class="text-[11px] text-slate-400 hover:text-rose-400 mono underline">
+              YouTube @ ${escapeHtml(ch.timestamp)} ↗
+            </a>
+          </div>
+          <p class="text-xs sm:text-sm text-slate-200 leading-relaxed print-text-dark">${escapeHtml(ch.what_is_taught || ch.summary)}</p>
+          <ul class="space-y-1 pl-1 pt-1">
+            ${(ch.takeaways || []).map(t => `
+              <li class="text-xs text-slate-300 flex items-start gap-2 print-text-dark">
+                <span class="text-emerald-400 font-bold">✓</span>
+                <span>${escapeHtml(t)}</span>
+              </li>
+            `).join("")}
+          </ul>
+        </div>
+      `).join("");
+    }
+
+    function seekEmbeddedPlayer(videoId, startSeconds) {
+      const iframe = document.getElementById("youtubePlayerIframe");
+      iframe.src = `https://www.youtube.com/embed/${videoId}?start=${startSeconds}&autoplay=1&rel=0`;
+    }
+
+    function renderRollupSection(data, videos) {
+      const rollup = data.kind === "playlist" ? data.playlist_rollup : {
+        master_thesis: data.video.summary.executive_summary,
+        learning_progression: data.video.summary.chapters.map(c => ({
+          phase: `[${c.timestamp}] ${c.title}`,
+          focus: c.what_is_taught || c.summary
+        })),
+        cross_video_takeaways: data.video.summary.key_takeaways,
+        recommended_watch_strategy: `Review the Deep Lecture Notes & Formulas tab first, then test yourself on the Exam Q&A and Interview Flashcards.`,
+        glossary_terms: (data.video.summary.lecture_notes?.formulas_and_algorithms || []).map(f => ({
+          term: f.name,
+          definition: `${f.expression} — ${f.explanation}`
+        }))
+      };
+
+      document.getElementById("rollupMasterThesis").textContent = rollup.master_thesis || "";
+      document.getElementById("rollupCrossTakeaways").innerHTML = (rollup.cross_video_takeaways || []).map(item => `
+        <li class="flex items-start gap-2.5">
+          <span class="text-rose-400 font-bold mt-0.5">✦</span>
+          <span>${escapeHtml(item)}</span>
+        </li>
+      `).join("");
+
+      document.getElementById("rollupProgressionList").innerHTML = (rollup.learning_progression || []).map(lp => `
+        <div class="bg-slate-950/90 border border-slate-800/90 rounded-xl p-4 space-y-1.5 print-card">
+          <div class="text-xs font-bold text-indigo-400 uppercase tracking-wider">${escapeHtml(lp.phase)}</div>
+          <p class="text-xs sm:text-sm text-slate-300 leading-relaxed print-text-dark">${escapeHtml(lp.focus)}</p>
+        </div>
+      `).join("");
+
+      document.getElementById("rollupWatchStrategy").textContent = rollup.recommended_watch_strategy || "";
+      document.getElementById("rollupGlossaryList").innerHTML = (rollup.glossary_terms || []).map(g => `
+        <div class="bg-slate-950/80 border border-slate-800/80 rounded-xl p-3">
+          <div class="text-xs font-bold text-rose-300">${escapeHtml(g.term)}</div>
+          <div class="text-xs text-slate-300 mt-0.5 leading-relaxed print-text-dark">${escapeHtml(g.definition)}</div>
+        </div>
+      `).join("");
+
+      // Render ALL Playlist Videos in the Catalog Grid (Never truncated!)
+      document.getElementById("rollupCatalogCountBadge").textContent = `Showing all ${videos.length} video${videos.length > 1 ? 's' : ''}`;
+      document.getElementById("rollupAllVideosGrid").innerHTML = videos.map((v, idx) => {
+        const isReady = !v.summary?.needs_deep_summary;
+        return `
+          <div
+            onclick="selectVideoForInspection(${idx}, true); switchMainTab('notes');"
+            class="cursor-pointer bg-slate-950/90 hover:bg-slate-900 border ${isReady ? 'border-emerald-500/30' : 'border-slate-800'} hover:border-rose-500/50 rounded-xl p-4 flex flex-col justify-between gap-3 transition print-card"
+          >
+            <div class="space-y-2">
+              <div class="flex items-center justify-between text-xs">
+                <span class="px-2 py-0.5 rounded bg-rose-500/15 text-rose-300 font-bold mono">Lecture #${idx + 1}</span>
+                <span class="text-slate-400 mono">${escapeHtml(v.duration_formatted)}</span>
+              </div>
+              <h3 class="text-sm font-bold text-white line-clamp-2 print-text-dark">${escapeHtml(v.title)}</h3>
+              <p class="text-xs text-slate-300 line-clamp-3 leading-relaxed print-text-dark">${escapeHtml(v.summary?.executive_summary || "")}</p>
+            </div>
+            <div class="pt-2 border-t border-slate-800/80 flex items-center justify-between text-[11px]">
+              <span class="${isReady ? 'text-emerald-400 font-semibold' : 'text-amber-400'}">
+                ${isReady ? '✓ Deep Study Notes Ready' : '⚡ Click to Generate AI Notes'}
+              </span>
+              <span class="text-rose-400 font-semibold">Open Notes →</span>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderDurationCalculator(videos) {
+      const selectedDurations = videos
+        .filter((_, idx) => includedVideoFlags[idx])
+        .map(v => v.duration_seconds);
+      const stats = computeDurationStatsClient(selectedDurations);
+
+      const speedOrder = ["1x", "1.25x", "1.5x", "1.75x", "2x"];
+      document.getElementById("speedCardsGrid").innerHTML = speedOrder.map(spKey => {
+        const sp = stats.speeds[spKey];
+        const isHighlight = spKey === "1.5x";
+        return `
+          <div class="rounded-xl p-4 border ${isHighlight ? 'bg-rose-500/10 border-rose-500/40' : 'bg-slate-950/90 border-slate-800'} print-card">
+            <div class="text-xs font-bold uppercase tracking-wider ${isHighlight ? 'text-rose-300' : 'text-slate-400'}">${spKey} Speed</div>
+            <div class="text-xl font-bold text-white mono mt-2 print-text-dark">${sp.watch_formatted}</div>
+            <div class="text-xs text-emerald-400 mt-1 mono">${sp.saved_seconds > 0 ? `Saves ${sp.saved_formatted}` : 'Baseline'}</div>
+          </div>
+        `;
+      }).join("");
+
+      document.getElementById("durationCalculatorTableBody").innerHTML = videos.map((v, idx) => {
+        const checked = includedVideoFlags[idx];
+        const d = v.duration_seconds;
+        return `
+          <tr class="${checked ? 'text-slate-200' : 'text-slate-500 opacity-60'}">
+            <td class="py-3 px-3 no-print">
+              <input type="checkbox" ${checked ? 'checked' : ''} onchange="toggleVideoInCalculator(${idx})" class="w-4 h-4 accent-rose-500 rounded cursor-pointer" />
+            </td>
+            <td class="py-3 px-3 mono font-semibold">${idx + 1}</td>
+            <td class="py-3 px-3 font-medium">${escapeHtml(v.title)}</td>
+            <td class="py-3 px-3 text-right mono">${formatSecondsHms(d)}</td>
+            <td class="py-3 px-3 text-right mono">${formatSecondsHms(d / 1.25)}</td>
+            <td class="py-3 px-3 text-right mono text-emerald-400 font-semibold">${formatSecondsHms(d / 1.5)}</td>
+            <td class="py-3 px-3 text-right mono">${formatSecondsHms(d / 1.75)}</td>
+            <td class="py-3 px-3 text-right mono text-indigo-300">${formatSecondsHms(d / 2.0)}</td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    function toggleVideoInCalculator(idx) {
+      const videos = currentData.kind === "playlist" ? currentData.videos : [currentData.video];
+      includedVideoFlags[idx] = !includedVideoFlags[idx];
+      renderDurationCalculator(videos);
+    }
+
+    function recalculateCustomDuration() {
+      const videos = currentData.kind === "playlist" ? currentData.videos : [currentData.video];
+      const s = Math.max(1, parseInt(document.getElementById("calcStartIdx").value || "1", 10));
+      const e = Math.min(videos.length, parseInt(document.getElementById("calcEndIdx").value || String(videos.length), 10));
+      includedVideoFlags = videos.map((_, idx) => (idx + 1) >= s && (idx + 1) <= e);
+      renderDurationCalculator(videos);
+    }
+
+    function selectAllPlaylistVideos(flag) {
+      const videos = currentData.kind === "playlist" ? currentData.videos : [currentData.video];
+      includedVideoFlags = videos.map(() => flag);
+      document.getElementById("calcStartIdx").value = 1;
+      document.getElementById("calcEndIdx").value = videos.length;
+      renderDurationCalculator(videos);
+    }
+
+    // -----------------------------------------------------------------------
+    // Complete Study & Interview Markdown / PDF Export
+    // -----------------------------------------------------------------------
+    function generateMarkdownString(data) {
+      const lines = [];
+      const videos = data.kind === "playlist" ? data.videos : [data.video];
+      if (data.kind === "playlist") {
+        lines.push(`# Course Study & Interview Guide: [${data.playlist.title}](${data.playlist.url})`);
+        lines.push(`**Instructor / Channel:** ${data.playlist.channel_title} | **Total Videos:** ${videos.length} | **Total Duration:** ${data.duration_stats.total_formatted}`);
+        lines.push("");
+        lines.push("## Master Course Synthesis");
+        lines.push(data.playlist_rollup.master_thesis || "");
+        lines.push("");
+      }
+
+      videos.forEach((v, idx) => {
+        const vsum = v.summary || {};
+        const notes = vsum.lecture_notes || {};
+        const exam = vsum.exam_prep || {};
+        const interview = vsum.interview_prep || {};
+
+        lines.push(`## Lecture ${idx + 1}: [${v.title}](${v.url}) (${v.duration_formatted})`);
+        lines.push(vsum.executive_summary || "");
+        lines.push("");
+
+        if (notes.core_concepts_taught?.length) {
+          lines.push("### Deep Lecture Notes (What Is Taught)");
+          notes.core_concepts_taught.forEach(c => {
+            lines.push(`#### ${c.concept} (\`${c.timestamp || '00:00'}\`)`);
+            lines.push(c.explanation || "");
+            if (c.code_example) {
+              lines.push("```");
+              lines.push(c.code_example.trim());
+              lines.push("```");
+            }
+            (c.key_points || []).forEach(kp => lines.push(`- ${kp}`));
+            lines.push("");
+          });
+        }
+
+        if (notes.formulas_and_algorithms?.length) {
+          lines.push("### Formulas, Equations & Algorithms");
+          notes.formulas_and_algorithms.forEach(f => {
+            lines.push(`- **${f.name}**: \`${f.expression}\``);
+            lines.push(`  - *Explanation*: ${f.explanation}`);
+            if (f.when_to_use) lines.push(`  - *When to apply*: ${f.when_to_use}`);
+          });
+          lines.push("");
+        }
+
+        if (exam.cheat_sheet_points?.length || exam.exam_questions?.length) {
+          lines.push("### University Exam Revision Pack");
+          (exam.cheat_sheet_points || []).forEach(pt => lines.push(`- **Must-Remember**: ${pt}`));
+          (exam.common_exam_traps || []).forEach(tr => lines.push(`- **Exam Trap**: ${tr}`));
+          (exam.exam_questions || []).forEach((eq, qIdx) => {
+            lines.push(`- **Exam Q${qIdx + 1} (${eq.difficulty})**: ${eq.question}`);
+            lines.push(`  - *Model Answer*: ${eq.model_answer}`);
+          });
+          lines.push("");
+        }
+
+        if (interview.interview_questions?.length) {
+          lines.push("### Technical Interview Prep Q&A");
+          interview.interview_questions.forEach((iq, qIdx) => {
+            lines.push(`- **Interview Q${qIdx + 1} [${iq.topic_tag}]**: ${iq.question}`);
+            lines.push(`  - *30s Elevator Answer*: ${iq.elevator_pitch_30s}`);
+            lines.push(`  - *Deep Dive*: ${iq.deep_dive_answer}`);
+            lines.push(`  - *Trade-Offs*: ${iq.follow_up_tradeoffs}`);
+          });
+          lines.push("");
+        }
+      });
+
+      return lines.join("\n");
+    }
+
+    async function copyMarkdownToClipboard() {
+      const md = generateMarkdownString(currentData);
+      await navigator.clipboard.writeText(md);
+      showStatusBanner("Copied complete Lecture Notes, Exam Q&As, and Interview Guide to clipboard!", "success");
+    }
+
+    function exportMarkdownFile() {
+      const md = generateMarkdownString(currentData);
+      const blob = new Blob([md], { type: "text/markdown;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "lecture_exam_interview_study_guide.md";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      showStatusBanner("Downloaded lecture_exam_interview_study_guide.md!", "success");
+    }
+
+    async function exportPdfFile() {
+      if (backendOnline) {
+        try {
+          const resp = await fetch(`${appConfig.backendUrl.replace(/\/$/, "")}/api/export/pdf`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ data: currentData })
+          });
+          if (resp.ok) {
+            const blob = await resp.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "lecture_exam_interview_study_guide.pdf";
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+            showStatusBanner("Downloaded PDF Study Guide generated by FastAPI backend!", "success");
+            return;
+          }
+        } catch (e) {}
+      }
+      window.print();
+    }
+
+    function switchMainTab(tabName) {
+      const tabs = ["notes", "exam", "interview", "chapters", "rollup", "calculator"];
+      tabs.forEach(t => {
+        const panel = document.getElementById(`tabPanel${t.charAt(0).toUpperCase() + t.slice(1)}`);
+        const btn = document.getElementById(`tabBtn${t.charAt(0).toUpperCase() + t.slice(1)}`);
+        if (!panel || !btn) return;
+        if (t === tabName) {
+          panel.classList.remove("hidden");
+          btn.className = "px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-rose-600 text-white shadow transition";
+        } else {
+          panel.classList.add("hidden");
+          btn.className = "px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 transition";
+        }
+      });
+    }
+
+    function openSettingsModal() {
+      document.getElementById("cfgBackendUrl").value = appConfig.backendUrl;
+      document.getElementById("cfgYoutubeKey").value = appConfig.youtubeApiKey;
+      document.getElementById("cfgLlmProvider").value = appConfig.llmProvider;
+      document.getElementById("cfgLlmKey").value = appConfig.llmApiKey;
+      const modal = document.getElementById("settingsModal");
+      modal.classList.remove("hidden");
+      modal.classList.add("flex");
+    }
+
+    function closeSettingsModal() {
+      const modal = document.getElementById("settingsModal");
+      modal.classList.add("hidden");
+      modal.classList.remove("flex");
+    }
+
+    function saveSettingsModal() {
+      appConfig.backendUrl = document.getElementById("cfgBackendUrl").value.trim() || "http://localhost:8000";
+      appConfig.youtubeApiKey = document.getElementById("cfgYoutubeKey").value.trim();
+      appConfig.llmProvider = document.getElementById("cfgLlmProvider").value;
+      appConfig.llmApiKey = document.getElementById("cfgLlmKey").value.trim();
+
+      localStorage.setItem("pulsetube_backend_url", appConfig.backendUrl);
+      localStorage.setItem("pulsetube_yt_key", appConfig.youtubeApiKey);
+      localStorage.setItem("pulsetube_llm_provider", appConfig.llmProvider);
+      localStorage.setItem("pulsetube_llm_key", appConfig.llmApiKey);
+
+      closeSettingsModal();
+      checkBackendHealth();
+      showStatusBanner("Saved API & Gemini Key configuration! Now click 'Summarize' or '✨ Deep AI Summarize Current Lecture'.", "success");
+    }
+
+    function escapeHtml(str) {
+      return String(str || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    document.getElementById("youtubeUrlInput").addEventListener("input", updateDetectedPill);
+    window.addEventListener("DOMContentLoaded", () => {
+      checkBackendHealth();
+      loadDemoPreset("cs229_playlist");
+    });
+  </script>
+</body>
+</html>
