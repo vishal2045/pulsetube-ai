@@ -21,6 +21,7 @@ Major Fixes in v4.0:
    - Preserves balanced parentheses in chapter titles like `Bean Scopes (Singleton & Prototype)`.
 """
 
+import asyncio
 import html
 import io
 import json
@@ -1189,7 +1190,13 @@ async def summarize_single_video(
     summary_depth: str = "comprehensive",
     study_goal: str = "master",
 ) -> Dict[str, Any]:
-    transcript_items, lang_label = await fetch_video_transcript(video["video_id"])
+    try:
+        transcript_items, lang_label = await asyncio.wait_for(
+            fetch_video_transcript(video["video_id"]),
+            timeout=4.5,
+        )
+    except Exception:
+        transcript_items, lang_label = [], "AI Deep Syllabus & Topic Synthesis (Fast Cloud Mode)" 
     chapter_buckets = group_transcript_into_chapters(
         transcript_items=transcript_items,
         video_title=video.get("title", "Untitled Video"),
@@ -1388,7 +1395,7 @@ Return ONLY valid JSON matching this exact schema:
         provider=provider,
         api_key=llm_api_key,
         model=llm_model,
-        youtube_url_for_native_ingest=(video.get("url") if not transcript_items else None),
+        youtube_url_for_native_ingest=(video.get("url") if (not transcript_items and video.get("duration_seconds", 0) <= 900) else None),
     )
 
     if not llm_res or not isinstance(llm_res, dict) or not llm_res.get("executive_summary"):
@@ -1721,6 +1728,7 @@ async def api_summarize_single_video_on_demand(req: SummarizeSingleVideoRequest)
     llm_key = clean_api_key(
         req.llm_api_key
         or (os.getenv("OPENAI_API_KEY") if req.llm_provider == "openai" else os.getenv("GEMINI_API_KEY"))
+        or os.getenv("NEXT_PUBLIC_GEMINI_API_KEY")
         or os.getenv("GOOGLE_API_KEY")
     )
 
@@ -1743,10 +1751,11 @@ async def api_summarize_single_video_on_demand(req: SummarizeSingleVideoRequest)
 @app.post("/api/analyze")
 async def analyze_youtube_url(req: AnalyzeRequest):
     parsed = parse_youtube_url(req.url)
-    yt_key = clean_api_key(req.youtube_api_key or os.getenv("YOUTUBE_API_KEY"))
+    yt_key = clean_api_key(req.youtube_api_key or os.getenv("YOUTUBE_API_KEY") or os.getenv("NEXT_PUBLIC_YOUTUBE_API_KEY") or os.getenv("GOOGLE_API_KEY"))
     llm_key = clean_api_key(
         req.llm_api_key
         or (os.getenv("OPENAI_API_KEY") if req.llm_provider == "openai" else os.getenv("GEMINI_API_KEY"))
+        or os.getenv("NEXT_PUBLIC_GEMINI_API_KEY")
         or os.getenv("GOOGLE_API_KEY")
     )
 

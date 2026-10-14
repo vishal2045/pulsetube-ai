@@ -1760,8 +1760,18 @@
         });
 
         if (!resp.ok) {
-          const errJson = await resp.json().catch(() => ({}));
-          throw new Error(errJson.detail || "Backend error. Make sure your YouTube Data API v3 Key and Gemini API Key are configured.");
+          const rawText = await resp.text().catch(() => "");
+          let detailMsg = "";
+          try {
+            const errJson = JSON.parse(rawText);
+            detailMsg = errJson.detail || errJson.message || "";
+          } catch (_) {
+            detailMsg = rawText.slice(0, 180).replace(/<[^>]+>/g, "").trim();
+          }
+          if (resp.status === 504) {
+            throw new Error("Vercel Function Timeout (HTTP 504): Update vercel.json with maxDuration: 60 or click 'API & Gemini Key Config' to verify keys.");
+          }
+          throw new Error(detailMsg || `Backend HTTP ${resp.status}: Make sure YOUTUBE_API_KEY and GEMINI_API_KEY are set in Vercel Environment Variables (and redeployed) or entered in 'API & Gemini Key Config'.`);
         }
 
         const payload = await resp.json();
