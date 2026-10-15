@@ -964,8 +964,8 @@ async def call_llm_json(
                 except Exception as exc:
                     errors_seen.append(f"{m}: {str(exc)[:100]}")
         else:
-            discovered = await discover_available_gemini_models(client, api_key)
-            models_to_try = [model] + [m for m in discovered if m != model] if model else discovered
+            fast_defaults = ["gemini-2.0-flash", "gemini-2.5-flash", "gemini-2.0-flash-lite", "gemini-2.5-flash-lite", "gemini-flash-latest"]
+            models_to_try = [model] + [m for m in fast_defaults if m != model] if model else fast_defaults
 
             for m in models_to_try:
                 # Try first with responseMimeType="application/json", and if 400 or parse error, retry standard
@@ -974,10 +974,12 @@ async def call_llm_json(
                         url = f"https://generativelanguage.googleapis.com/v1beta/models/{m}:generateContent"
                         gen_cfg: Dict[str, Any] = {
                             "temperature": 0.2,
-                            "maxOutputTokens": 16384,
+                            "maxOutputTokens": 6144,
                         }
                         if use_json_mime:
                             gen_cfg["responseMimeType"] = "application/json"
+                        if "2.5-flash" in m:
+                            gen_cfg["thinkingConfig"] = {"thinkingBudget": 0}
 
                         # If transcript scraping was blocked on Vercel/AWS IP, first try passing the YouTube URL
                         # directly via `fileData.fileUri` so Google's own servers ingest the YouTube video!
@@ -1190,10 +1192,12 @@ async def summarize_single_video(
     summary_depth: str = "comprehensive",
     study_goal: str = "master",
 ) -> Dict[str, Any]:
+    is_vercel = bool(os.getenv("VERCEL") or os.getenv("VERCEL_ENV"))
+    tr_timeout = 1.8 if is_vercel else 4.0
     try:
         transcript_items, lang_label = await asyncio.wait_for(
             fetch_video_transcript(video["video_id"]),
-            timeout=4.5,
+            timeout=tr_timeout,
         )
     except Exception:
         transcript_items, lang_label = [], "AI Deep Syllabus & Topic Synthesis (Fast Cloud Mode)" 
@@ -1395,7 +1399,7 @@ Return ONLY valid JSON matching this exact schema:
         provider=provider,
         api_key=llm_api_key,
         model=llm_model,
-        youtube_url_for_native_ingest=(video.get("url") if (not transcript_items and video.get("duration_seconds", 0) <= 900) else None),
+        youtube_url_for_native_ingest=(video.get("url") if (not is_vercel and not transcript_items and video.get("duration_seconds", 0) <= 600) else None),
     )
 
     if not llm_res or not isinstance(llm_res, dict) or not llm_res.get("executive_summary"):
@@ -1777,30 +1781,32 @@ async def analyze_youtube_url(req: AnalyzeRequest):
         durations = [v["duration_seconds"] for v in videos]
         duration_stats = calculate_playlist_durations(durations)
 
-        summarized_videos = []
-        for idx, v in enumerate(videos):
-            if idx < req.initial_deep_summarize_count:
-                sv = await summarize_single_video(
-                    video=v,
-                    provider=req.llm_provider,
-                    llm_api_key=llm_key or None,
-                    llm_model=req.llm_model,
-                    summary_depth=req.summary_depth,
-                    study_goal=req.study_goal,
-                )
-                sv["playlist_index"] = idx + 1
-                summarized_videos.append(sv)
-            else:
-                summarized_videos.append(build_lightweight_playlist_item_placeholder(v, idx + 1))
-
-        rollup = await generate_playlist_rollup(
-            playlist_meta=pl_meta,
-            all_videos=videos,
-            duration_stats=duration_stats,
-            provider=req.llm_provider,
-            llm_api_key=llm_key or None,
-            llm_model=req.llm_model,
-        )
+        if videos:
+            first_video_task = summarize_single_video(
+                video=videos[0],
+                provider=req.llm_provider,
+                llm_api_key=llm_key or None,
+                llm_model=req.llm_model,
+                summary_depth=req.summary_depth,
+                study_goal=req.study_goal,
+            )
+            rollup_task = generate_playlist_rollup(
+                playlist_meta=pl_meta,
+                all_videos=videos,
+                duration_stats=duration_stats,
+                provider=req.llm_provider,
+                llm_api_key=llm_key or None,
+                llm_model=req.llm_model,
+            )
+            first_sv, rollup = await asyncio.gather(first_video_task, rollup_task)
+            first_sv["playlist_index"] = 1
+            summarized_videos = [first_sv] + [
+                build_lightweight_playlist_item_placeholder(v, idx + 1)
+                for idx, v in enumerate(videos[1:], start=1)
+            ]
+        else:
+            summarized_videos = []
+            rollup = {}
 
         first_llm_status = summarized_videos[0].get("summary", {}).get("llm_status", "") if summarized_videos else ""
         used_ai = bool(summarized_videos and summarized_videos[0].get("summary", {}).get("is_ai_generated"))
