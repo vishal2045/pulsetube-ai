@@ -831,13 +831,14 @@ async def fetch_youtube_playlist_metadata(
 # ---------------------------------------------------------------------------
 
 _CACHED_GEMINI_MODELS: Dict[str, List[str]] = {}
+_VIDEO_SUMMARY_CACHE: Dict[str, Dict[str, Any]] = {}
 
 
 async def discover_available_gemini_models(client: httpx.AsyncClient, api_key: str) -> List[str]:
     """
-    Calls `GET https://generativelanguage.googleapis.com/v1beta/models?key=...`
-    to discover the exact model names supported by the user's API key!
-    Fixes `HTTP 404: models/gemini-1.5-flash is not found for API version v1beta`.
+    Dynamically discovers ALL text/instruction models available on the user's Google AI Studio key,
+    including `gemini-*` (flash-lite, flash) AND `gemma-3-*` (`gemma-3-27b-it`, `gemma-3-12b-it`),
+    which have separate free-tier quota buckets (up to 14,400 free requests/day on Gemma 3)!
     """
     cache_key = api_key[-8:]
     if cache_key in _CACHED_GEMINI_MODELS:
@@ -845,11 +846,12 @@ async def discover_available_gemini_models(client: httpx.AsyncClient, api_key: s
 
     preferred_order = [
         "gemini-3.8-flash",
+        "gemini-3.8-flash-lite",
+        "gemini-flash-lite-latest",
         "gemini-flash-latest",
-        "gemini-3.8-pro",
-        "gemini-pro-latest",
-        "gemini-3.0-flash",
-        "gemini-2.5-flash",
+        "gemma-3-27b-it",
+        "gemma-3-12b-it",
+        "gemma-3-4b-it",
     ]
 
     try:
@@ -865,24 +867,46 @@ async def discover_available_gemini_models(client: httpx.AsyncClient, api_key: s
                 name = str(m.get("name", "")).replace("models/", "")
                 if "generateContent" not in methods:
                     continue
-                # Skip specialized non-text models
-                if any(skip in name.lower() for skip in ["tts", "imagen", "embedding", "aqa", "vision", "audio", "robotics", "computer-use", "thinking-exp"]):
+                # Skip non-text, deprecated (1.5, 2.0, 2.5), or zero-free-tier `-pro` models
+                low = name.lower()
+                if any(
+                    skip in low
+                    for skip in [
+                        "tts",
+                        "imagen",
+                        "embedding",
+                        "aqa",
+                        "vision",
+                        "audio",
+                        "robotics",
+                        "computer-use",
+                        "thinking-exp",
+                        "1.5",
+                        "2.0",
+                        "2.5",
+                        "-pro",
+                    ]
+                ):
                     continue
-                if name.startswith("gemini-"):
+                if low.startswith("gemini-") or low.startswith("gemma-3"):
                     valid_names.append(name)
 
             if valid_names:
                 ranked = [p for p in preferred_order if p in valid_names]
+                # Put flash-lite and gemma-3 models right after 3.8-flash so 429 quota limits fail over to free buckets!
+                for v in valid_names:
+                    if v not in ranked and ("lite" in v.lower() or "gemma-3" in v.lower() or "flash" in v.lower()):
+                        ranked.append(v)
                 for v in valid_names:
                     if v not in ranked:
                         ranked.append(v)
-                print(f"[Gemini ListModels] Discovered available models: {ranked[:6]}")
-                _CACHED_GEMINI_MODELS[cache_key] = ranked[:6]
-                return ranked[:6]
+                print(f"[Gemini Free-Tier Pool] Discovered models: {ranked[:10]}")
+                _CACHED_GEMINI_MODELS[cache_key] = ranked[:10]
+                return ranked[:10]
     except Exception as exc:
         print(f"[Gemini ListModels] Warning: {exc}")
 
-    return preferred_order[:5]
+    return preferred_order
 
 
 def _parse_or_repair_json(raw_text: str) -> Optional[Dict[str, Any]]:
@@ -918,121 +942,154 @@ async def call_llm_json(
     model: Optional[str] = None,
     youtube_url_for_native_ingest: Optional[str] = None,
 ) -> Tuple[Optional[Dict[str, Any]], str]:
-    api_key = clean_api_key(api_key)
-    if not api_key:
-        return None, "No Gemini/OpenAI API key configured (Click 'API & Gemini Key Config' to add your key)"
+    """
+    Free-Tier Optimized Multi-Model & Multi-Provider LLM Engine:
+    1. Supports comma-separated multiple API keys (`key1,key2`) for automatic quota rotation.
+    2. Auto-detects Free Groq API keys (`gsk_...` -> `llama-3.3-70b-versatile`, `llama-3.1-8b-instant`)
+       and Free OpenRouter keys (`sk-or-...`).
+    3. For Google AI Studio keys (`AIza...`), automatically rotates across separate free-tier quota buckets:
+       `gemini-3.8-flash` -> `gemini-3.8-flash-lite` / `gemini-flash-lite-latest` -> `gemma-3-27b-it` / `gemma-3-12b-it`
+       (Gemma 3 models on the same Gemini API key have 14,400 free requests/day!).
+    """
+    raw_keys_str = (
+        api_key
+        or os.getenv("GROQ_API_KEY")
+        or os.getenv("GEMINI_API_KEY")
+        or os.getenv("OPENAI_API_KEY")
+        or ""
+    )
+    key_list = [clean_api_key(k) for k in raw_keys_str.split(",") if clean_api_key(k)]
+    if not key_list:
+        return None, "No API key configured (Add a free Gemini or Groq API key in 'API & Gemini Key Config')"
 
     errors_seen: List[str] = []
-    async with httpx.AsyncClient(timeout=90.0) as client:
-        if provider.lower() == "openai":
-            models_to_try = [model] if model else ["gpt-4o-mini", "gpt-4o"]
-            for m in models_to_try:
-                try:
-                    resp = await client.post(
-                        "https://api.openai.com/v1/chat/completions",
-                        headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
-                        json={
-                            "model": m,
-                            "response_format": {"type": "json_object"},
-                            "messages": [
-                                {
-                                    "role": "system",
-                                    "content": (
-                                        "You are an expert Computer Science & University Professor. "
-                                        "Teach every concept in depth with clear explanations, code examples, and exam/interview Q&As. "
-                                        "Always output valid JSON."
-                                    ),
-                                },
-                                {"role": "user", "content": prompt},
-                            ],
-                            "temperature": 0.2,
-                            "max_tokens": 8192,
-                        },
-                    )
-                    if resp.status_code == 200:
-                        content = resp.json()["choices"][0]["message"]["content"]
-                        parsed = _parse_or_repair_json(content)
-                        if parsed:
-                            print(f"[LLM] OpenAI ({m}) generated study JSON successfully.")
-                            return parsed, f"AI Deep Study Guide ({m})"
-                        errors_seen.append(f"{m}: JSON parse failed")
-                    else:
-                        err_msg = resp.json().get("error", {}).get("message", resp.text[:140])
-                        errors_seen.append(f"{m} HTTP {resp.status_code}: {err_msg}")
-                except Exception as exc:
-                    errors_seen.append(f"{m}: {str(exc)[:100]}")
-        else:
-            # Use gemini-3.8-flash and gemini-flash-latest first (since gemini-2.0-flash and 2.5-flash return 404)
-            fast_defaults = ["gemini-3.8-flash", "gemini-flash-latest", "gemini-pro-latest"]
-            models_to_try = [model] + [m for m in fast_defaults if m != model] if model else fast_defaults
+    async with httpx.AsyncClient(timeout=75.0) as client:
+        for current_key in key_list:
+            # Auto-detect provider from key prefix so user doesn't even have to switch dropdown!
+            eff_provider = provider.lower()
+            if current_key.startswith("gsk_"):
+                eff_provider = "groq"
+            elif current_key.startswith("sk-or-"):
+                eff_provider = "openrouter"
+            elif current_key.startswith("AIza"):
+                eff_provider = "gemini"
 
-            for m in models_to_try:
-                # Try first with responseMimeType="application/json", and if 400 or parse error, retry standard
-                for use_json_mime in [True, False]:
+            if eff_provider in ("groq", "openai", "openrouter"):
+                if eff_provider == "groq":
+                    endpoint = "https://api.groq.com/openai/v1/chat/completions"
+                    models_to_try = [model] if model else ["llama-3.3-70b-versatile", "llama-3.1-8b-instant"]
+                elif eff_provider == "openrouter":
+                    endpoint = "https://openrouter.ai/api/v1/chat/completions"
+                    models_to_try = [model] if model else [
+                        "meta-llama/llama-3.3-70b-instruct:free",
+                        "google/gemma-3-27b-it:free",
+                    ]
+                else:
+                    endpoint = "https://api.openai.com/v1/chat/completions"
+                    models_to_try = [model] if model else ["gpt-4o-mini", "gpt-4o"]
+
+                for m in models_to_try:
+                    try:
+                        resp = await client.post(
+                            endpoint,
+                            headers={"Authorization": f"Bearer {current_key}", "Content-Type": "application/json"},
+                            json={
+                                "model": m,
+                                "response_format": {"type": "json_object"},
+                                "messages": [
+                                    {
+                                        "role": "system",
+                                        "content": (
+                                            "You are an expert Computer Science & University Professor. "
+                                            "Teach every concept in depth with clear explanations, code examples, and exam/interview Q&As. "
+                                            "Always output valid JSON."
+                                        ),
+                                    },
+                                    {"role": "user", "content": prompt},
+                                ],
+                                "temperature": 0.2,
+                                "max_tokens": 6000,
+                            },
+                        )
+                        if resp.status_code == 200:
+                            content = resp.json()["choices"][0]["message"]["content"]
+                            parsed = _parse_or_repair_json(content)
+                            if parsed:
+                                print(f"[LLM] {eff_provider.upper()} ({m}) generated study JSON successfully!")
+                                return parsed, f"AI Deep Study Guide ({m})"
+                            errors_seen.append(f"{m}: JSON parse failed")
+                        else:
+                            err_msg = resp.json().get("error", {}).get("message", resp.text[:120])
+                            errors_seen.append(f"{m} HTTP {resp.status_code}: {err_msg}")
+                    except Exception as exc:
+                        errors_seen.append(f"{m}: {str(exc)[:90]}")
+            else:
+                # Google AI Studio Free-Tier Model Pool (Gemini Flash + Flash-Lite + Gemma 3 27B/12B!)
+                discovered = await discover_available_gemini_models(client, current_key)
+                models_to_try = [model] + [m for m in discovered if m != model] if model else discovered
+
+                for m in models_to_try:
+                    is_gemma = "gemma" in m.lower()
                     try:
                         url = f"https://generativelanguage.googleapis.com/v1beta/models/{m}:generateContent"
                         gen_cfg: Dict[str, Any] = {
                             "temperature": 0.2,
-                            "maxOutputTokens": 16384,
+                            "maxOutputTokens": 8192 if is_gemma else 16384,
                         }
-                        if use_json_mime:
+                        # Gemma models on v1beta do not accept responseMimeType="application/json"
+                        if not is_gemma:
                             gen_cfg["responseMimeType"] = "application/json"
-
-                        # If transcript scraping was blocked on Vercel/AWS IP, first try passing the YouTube URL
-                        # directly via `fileData.fileUri` so Google's own servers ingest the YouTube video!
-                        parts_list: List[Dict[str, Any]] = []
-                        if youtube_url_for_native_ingest and use_json_mime:
-                            parts_list.append({
-                                "fileData": {
-                                    "mimeType": "video/mp4",
-                                    "fileUri": youtube_url_for_native_ingest,
-                                }
-                            })
-                        parts_list.append({"text": prompt})
 
                         resp = await client.post(
                             url,
-                            params={"key": api_key},
+                            params={"key": current_key},
                             json={
-                                "contents": [{"parts": parts_list}],
+                                "contents": [{"parts": [{"text": prompt}]}],
                                 "generationConfig": gen_cfg,
                             },
                         )
-                        # If native YouTube fileUri isn't supported for this video length/model, immediately retry text-only
-                        if resp.status_code != 200 and youtube_url_for_native_ingest and len(parts_list) > 1:
-                            resp = await client.post(
+                        if resp.status_code == 200:
+                            candidates = resp.json().get("candidates", [])
+                            if candidates:
+                                parts = candidates[0].get("content", {}).get("parts", [])
+                                non_thought_parts = [p.get("text", "") for p in parts if not p.get("thought")]
+                                text = "".join(non_thought_parts) or "".join(p.get("text", "") for p in parts)
+                                parsed = _parse_or_repair_json(text)
+                                if parsed:
+                                    print(f"[LLM] Google AI ({m}) generated study JSON successfully!")
+                                    return parsed, f"AI Deep Study Guide ({m})"
+                                errors_seen.append(f"{m}: JSON truncated")
+                        elif resp.status_code == 400 and not is_gemma:
+                            # Retry once without responseMimeType if model rejected json mime type
+                            gen_cfg.pop("responseMimeType", None)
+                            resp2 = await client.post(
                                 url,
-                                params={"key": api_key},
+                                params={"key": current_key},
                                 json={
                                     "contents": [{"parts": [{"text": prompt}]}],
                                     "generationConfig": gen_cfg,
                                 },
                             )
-                        if resp.status_code == 200:
-                            candidates = resp.json().get("candidates", [])
-                            if candidates:
-                                parts = candidates[0].get("content", {}).get("parts", [])
-                                # Filter out internal thinking parts (`thought: true`) from Gemini 2.5 models!
-                                non_thought_parts = [p.get("text", "") for p in parts if not p.get("thought")]
-                                text = "".join(non_thought_parts) or "".join(p.get("text", "") for p in parts)
-                                parsed = _parse_or_repair_json(text)
-                                if parsed:
-                                    print(f"[LLM] Gemini ({m}) generated study JSON successfully!")
-                                    return parsed, f"AI Deep Study Guide ({m})"
-                                errors_seen.append(f"{m}: JSON truncated/invalid")
-                        elif resp.status_code == 400 and use_json_mime:
-                            # Retry same model without responseMimeType
-                            continue
+                            if resp2.status_code == 200:
+                                candidates = resp2.json().get("candidates", [])
+                                if candidates:
+                                    parts = candidates[0].get("content", {}).get("parts", [])
+                                    non_thought_parts = [p.get("text", "") for p in parts if not p.get("thought")]
+                                    text = "".join(non_thought_parts) or "".join(p.get("text", "") for p in parts)
+                                    parsed = _parse_or_repair_json(text)
+                                    if parsed:
+                                        return parsed, f"AI Deep Study Guide ({m})"
                         else:
-                            err_msg = resp.json().get("error", {}).get("message", resp.text[:140])
-                            errors_seen.append(f"{m} HTTP {resp.status_code}: {err_msg}")
-                            print(f"[LLM Warning] {m} -> HTTP {resp.status_code}: {err_msg}")
-                            break
+                            err_msg = resp.json().get("error", {}).get("message", resp.text[:100])
+                            errors_seen.append(f"{m} HTTP {resp.status_code}")
+                            print(f"[LLM Quota/Error] {m} -> HTTP {resp.status_code}: {err_msg[:90]}")
+                            # Immediately continue to the next free model in the pool (e.g. flash-lite or gemma-3-27b-it)!
+                            continue
                     except Exception as exc:
-                        errors_seen.append(f"{m}: {str(exc)[:100]}")
-                        break
+                        errors_seen.append(f"{m}: {str(exc)[:80]}")
+                        continue
 
-    summary_err = " | ".join(errors_seen) if errors_seen else "LLM request failed"
+    summary_err = " | ".join(errors_seen[-3:]) if errors_seen else "All free-tier models exhausted on this key"
     return None, summary_err
 
 
@@ -1189,6 +1246,10 @@ async def summarize_single_video(
     summary_depth: str = "comprehensive",
     study_goal: str = "master",
 ) -> Dict[str, Any]:
+    cache_id = f"{video.get('video_id')}_{study_goal}"
+    if cache_id in _VIDEO_SUMMARY_CACHE:
+        print(f"[Cache Hit] Returning cached AI study guide for {video.get('video_id')} (0 quota used!)")
+        return _VIDEO_SUMMARY_CACHE[cache_id]
     is_vercel = bool(os.getenv("VERCEL") or os.getenv("VERCEL_ENV"))
     tr_timeout = 1.8 if is_vercel else 4.0
     try:
@@ -1422,13 +1483,16 @@ Return ONLY valid JSON matching this exact schema:
         summary_final = llm_res
 
     word_count = len(full_transcript_text.split()) if full_transcript_text else 0
-    return {
+    result_obj = {
         **video,
         "transcript_status": lang_label,
         "transcript_word_count": word_count,
         "transcript_snippets": transcript_items[:500],
         "summary": summary_final,
     }
+    if summary_final.get("is_ai_generated"):
+        _VIDEO_SUMMARY_CACHE[cache_id] = result_obj
+    return result_obj
 
 
 async def generate_playlist_rollup(
@@ -1480,7 +1544,7 @@ Return ONLY valid JSON:
   ]
 }}"""
 
-    llm_rollup, _ = await call_llm_json(prompt, provider=provider, api_key=llm_api_key, model=llm_model)
+    llm_rollup = None  # Zero-quota deterministic rollup: saves 100% of free daily LLM requests for individual lectures!
 
     if not llm_rollup or not isinstance(llm_rollup, dict) or "master_thesis" not in llm_rollup:
         total_v = len(all_videos)
