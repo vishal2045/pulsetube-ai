@@ -844,14 +844,12 @@ async def discover_available_gemini_models(client: httpx.AsyncClient, api_key: s
         return _CACHED_GEMINI_MODELS[cache_key]
 
     preferred_order = [
-        "gemini-2.0-flash",
-        "gemini-2.0-flash-001",
-        "gemini-2.5-flash",
-        "gemini-2.0-flash-lite",
-        "gemini-2.5-flash-lite",
-        "gemini-2.5-pro",
+        "gemini-3.8-flash",
         "gemini-flash-latest",
+        "gemini-3.8-pro",
         "gemini-pro-latest",
+        "gemini-3.0-flash",
+        "gemini-2.5-flash",
     ]
 
     try:
@@ -964,7 +962,8 @@ async def call_llm_json(
                 except Exception as exc:
                     errors_seen.append(f"{m}: {str(exc)[:100]}")
         else:
-            fast_defaults = ["gemini-2.0-flash", "gemini-2.5-flash", "gemini-2.0-flash-lite", "gemini-2.5-flash-lite", "gemini-flash-latest"]
+            # Use gemini-3.8-flash and gemini-flash-latest first (since gemini-2.0-flash and 2.5-flash return 404)
+            fast_defaults = ["gemini-3.8-flash", "gemini-flash-latest", "gemini-pro-latest"]
             models_to_try = [model] + [m for m in fast_defaults if m != model] if model else fast_defaults
 
             for m in models_to_try:
@@ -974,12 +973,10 @@ async def call_llm_json(
                         url = f"https://generativelanguage.googleapis.com/v1beta/models/{m}:generateContent"
                         gen_cfg: Dict[str, Any] = {
                             "temperature": 0.2,
-                            "maxOutputTokens": 6144,
+                            "maxOutputTokens": 16384,
                         }
                         if use_json_mime:
                             gen_cfg["responseMimeType"] = "application/json"
-                        if "2.5-flash" in m:
-                            gen_cfg["thinkingConfig"] = {"thinkingBudget": 0}
 
                         # If transcript scraping was blocked on Vercel/AWS IP, first try passing the YouTube URL
                         # directly via `fileData.fileUri` so Google's own servers ingest the YouTube video!
@@ -1035,7 +1032,7 @@ async def call_llm_json(
                         errors_seen.append(f"{m}: {str(exc)[:100]}")
                         break
 
-    summary_err = " | ".join(errors_seen[:2]) if errors_seen else "LLM request failed"
+    summary_err = " | ".join(errors_seen) if errors_seen else "LLM request failed"
     return None, summary_err
 
 
