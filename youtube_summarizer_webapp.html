@@ -1,29 +1,38 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PulseTube AI v3.0 — Full-Playlist & Lecture Exam/Interview Summarizer</title>
+  <title>PulseTube AI — Full-Playlist & Lecture Exam/Interview Summarizer</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
-      darkMode: 'class',
       theme: {
         extend: {
-          colors: {
-            slate: {
-              850: '#141c2b',
-              925: '#0b111e'
-            }
+          fontFamily: {
+            sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+            display: ['Plus Jakarta Sans', 'Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace']
           }
         }
       }
     }
   </script>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
     body {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #f8fafc;
+      background-image:
+        radial-gradient(at 15% 0%, rgba(255, 228, 230, 0.55) 0px, transparent 50%),
+        radial-gradient(at 85% 0%, rgba(224, 231, 255, 0.55) 0px, transparent 50%);
+      background-attachment: fixed;
+      color: #0f172a;
+      -webkit-font-smoothing: antialiased;
+    }
+    h1, h2, h3, h4 {
+      font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+      letter-spacing: -0.015em;
     }
     .mono {
       font-family: 'JetBrains Mono', monospace;
@@ -33,14 +42,14 @@
       height: 8px;
     }
     ::-webkit-scrollbar-track {
-      background: #0f172a;
+      background: #f1f5f9;
     }
     ::-webkit-scrollbar-thumb {
-      background: #334155;
-      border-radius: 4px;
+      background: #cbd5e1;
+      border-radius: 9999px;
     }
     ::-webkit-scrollbar-thumb:hover {
-      background: #475569;
+      background: #94a3b8;
     }
     @media print {
       body {
@@ -57,16 +66,13 @@
         box-shadow: none !important;
         break-inside: avoid;
       }
-      .print-text-dark {
-        color: #0f172a !important;
-      }
     }
   </style>
 </head>
-<body class="bg-slate-925 text-slate-100 min-h-screen flex flex-col selection:bg-rose-500 selection:text-white">
+<body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col selection:bg-rose-500 selection:text-white">
 
   <!-- Top Navigation Header -->
-  <header class="border-b border-slate-800/80 bg-slate-900/90 backdrop-blur sticky top-0 z-30 no-print">
+  <header class="border-b border-slate-200/90 bg-white/85 backdrop-blur-md sticky top-0 z-30 shadow-sm no-print">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
       <div class="flex items-center gap-3">
         <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-500 via-orange-500 to-amber-500 flex items-center justify-center shadow-lg shadow-rose-500/20">
@@ -76,22 +82,22 @@
         </div>
         <div>
           <div class="flex items-center gap-2">
-            <span class="font-bold text-lg tracking-tight text-white">PulseTube AI</span>
-            <span class="text-[11px] font-semibold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">v4.0 • Dynamic Gemini ListModels + Code & Concept Engine</span>
+            <span class="font-extrabold text-lg tracking-tight bg-gradient-to-r from-slate-900 via-rose-600 to-orange-500 bg-clip-text text-transparent">PulseTube AI</span>
+            <span class="text-[11px] font-semibold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-xs">v5.0 • Instant Gemini Flash-Lite + Clean Light UI</span>
           </div>
-          <p class="text-xs text-slate-400 hidden sm:block">4-Layer Transcript Extractor • Full 42+ Video Playlists • On-Demand Lecture AI Notes • Exam & Interview Prep</p>
+          <p class="text-xs text-slate-500 font-medium hidden sm:block">4-Layer Transcript Extractor • Full 42+ Video Playlists • On-Demand Lecture AI Notes • Exam & Interview Prep</p>
         </div>
       </div>
 
       <!-- Backend Status & Settings -->
       <div class="flex items-center gap-2.5">
-        <div id="backendStatusBadge" class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/90 border border-slate-700/80 text-xs">
+        <div id="backendStatusBadge" class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 border border-slate-200 text-xs font-medium">
           <span id="backendDot" class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-          <span id="backendStatusText" class="text-slate-300">Checking Backend...</span>
+          <span id="backendStatusText" class="text-slate-700">Checking Backend...</span>
         </div>
 
-        <button onclick="openSettingsModal()" class="px-3.5 py-2 rounded-lg bg-rose-600/20 hover:bg-rose-600/30 border border-rose-500/40 text-xs font-semibold text-rose-200 flex items-center gap-2 transition">
-          <svg class="w-4 h-4 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <button onclick="openSettingsModal()" class="px-3.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 border border-rose-200 text-xs font-semibold text-rose-700 flex items-center gap-2 transition shadow-xs cursor-pointer">
+          <svg class="w-4 h-4 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
           </svg>
@@ -105,10 +111,10 @@
   <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
     <!-- URL Input, Mode Toggle & Study Goal Bar -->
-    <section class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-xl no-print">
+    <section class="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-sm no-print">
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-3.5 items-end">
         <div class="lg:col-span-5">
-          <label for="youtubeUrlInput" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
+          <label for="youtubeUrlInput" class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-2">
             YouTube Video or Course Playlist URL
           </label>
           <div class="relative flex items-center">
@@ -116,20 +122,20 @@
               id="youtubeUrlInput"
               type="text"
               placeholder="Paste any YouTube Video (watch?v=...) or Playlist (playlist?list=...) URL..."
-              class="w-full bg-slate-950 border border-slate-700/90 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 rounded-xl pl-4 pr-28 py-3 text-sm text-white placeholder-slate-500 outline-none transition"
+              class="w-full bg-slate-50 focus:bg-white border border-slate-300 focus:border-rose-500 focus:ring-4 focus:ring-rose-500/15 rounded-xl pl-4 pr-28 py-3 text-sm text-slate-900 placeholder-slate-400 font-medium outline-none transition"
               value="https://www.youtube.com/playlist?list=PLoROMvodv4rMiGQp3WXShtMGgzqpfVfbU"
             />
-            <span id="detectedTypePill" class="absolute right-2.5 px-2 py-1 rounded-md text-[10px] font-semibold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+            <span id="detectedTypePill" class="absolute right-2.5 px-2 py-1 rounded-md text-[10px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
               Playlist
             </span>
           </div>
         </div>
 
         <div class="lg:col-span-2">
-          <label for="urlModeSelect" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
+          <label for="urlModeSelect" class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-2">
             URL Target Mode
           </label>
-          <select id="urlModeSelect" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-3 text-xs sm:text-sm text-slate-200 focus:border-rose-500 outline-none">
+          <select id="urlModeSelect" class="w-full bg-slate-50 hover:bg-white border border-slate-300 rounded-xl px-3 py-3 text-xs sm:text-sm text-slate-800 font-medium focus:border-rose-500 focus:ring-4 focus:ring-rose-500/15 outline-none transition">
             <option value="auto" selected>Auto-Detect</option>
             <option value="video">🎬 Single Video Only</option>
             <option value="playlist">📚 Full Playlist (All Videos)</option>
@@ -137,10 +143,10 @@
         </div>
 
         <div class="lg:col-span-3">
-          <label for="studyGoalSelect" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
+          <label for="studyGoalSelect" class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-2">
             Study Goal / Persona
           </label>
-          <select id="studyGoalSelect" onchange="applyStudyGoalView()" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-3 text-xs sm:text-sm text-slate-200 focus:border-rose-500 outline-none">
+          <select id="studyGoalSelect" onchange="applyStudyGoalView()" class="w-full bg-slate-50 hover:bg-white border border-slate-300 rounded-xl px-3 py-3 text-xs sm:text-sm text-slate-800 font-medium focus:border-rose-500 focus:ring-4 focus:ring-rose-500/15 outline-none transition">
             <option value="master" selected>🧠 Master Guide (Notes + Exam + Interview)</option>
             <option value="exam">🎓 University Exam Revision</option>
             <option value="interview">💼 Technical Interview Prep</option>
@@ -163,25 +169,25 @@
       </div>
 
       <!-- Quick Sample Presets & Export Bar -->
-      <div class="mt-4 pt-3.5 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-3 text-xs">
+      <div class="mt-4 pt-3.5 border-t border-slate-200/80 flex flex-wrap items-center justify-between gap-3 text-xs">
         <div class="flex flex-wrap items-center gap-2">
           <span class="text-slate-400 font-medium">Sample Lectures:</span>
-          <button onclick="loadDemoPreset('cs229_playlist')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition">
+          <button onclick="loadDemoPreset('cs229_playlist')" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200/80 text-slate-700 font-medium border border-slate-200/90 transition cursor-pointer">
             🎓 Stanford CS229 ML Playlist
           </button>
-          <button onclick="loadDemoPreset('karpathy_video')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition">
+          <button onclick="loadDemoPreset('karpathy_video')" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200/80 text-slate-700 font-medium border border-slate-200/90 transition cursor-pointer">
             💼 Andrej Karpathy — LLM Internals Video
           </button>
         </div>
 
         <div class="flex items-center gap-2">
-          <button onclick="copyMarkdownToClipboard()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 flex items-center gap-1.5 transition">
+          <button onclick="copyMarkdownToClipboard()" class="px-3 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-slate-700 font-semibold border border-slate-200 shadow-xs flex items-center gap-1.5 transition cursor-pointer">
             <span>📋 Copy Study Guide (.MD)</span>
           </button>
-          <button onclick="exportMarkdownFile()" class="px-3 py-1.5 rounded-lg bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/30 flex items-center gap-1.5 font-medium transition">
+          <button onclick="exportMarkdownFile()" class="px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 shadow-xs cursor-pointer flex items-center gap-1.5 font-medium transition">
             <span>⬇️ Download .MD</span>
           </button>
-          <button onclick="exportPdfFile()" class="px-3 py-1.5 rounded-lg bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-500/30 flex items-center gap-1.5 font-medium transition">
+          <button onclick="exportPdfFile()" class="px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 shadow-xs cursor-pointer flex items-center gap-1.5 font-medium transition">
             <span>📄 Export Study PDF</span>
           </button>
         </div>
@@ -191,49 +197,49 @@
     </section>
 
     <!-- Lecture / Course Overview Card -->
-    <section class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl print-card">
+    <section class="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-sm print-card">
       <div class="flex flex-col lg:flex-row gap-6 items-start justify-between">
         <div class="space-y-2 flex-1">
           <div class="flex flex-wrap items-center gap-2">
-            <span id="headerKindBadge" class="px-2.5 py-0.5 rounded-md text-xs font-semibold bg-rose-500/20 text-rose-300 border border-rose-500/30">
+            <span id="headerKindBadge" class="px-2.5 py-0.5 rounded-md text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200">
               DEEP LECTURE STUDY GUIDE
             </span>
-            <span id="headerChannelBadge" class="text-xs font-medium text-slate-400"></span>
+            <span id="headerChannelBadge" class="text-xs font-semibold text-slate-600"></span>
             <span class="text-slate-600">•</span>
-            <a id="headerSourceLink" href="#" target="_blank" rel="noopener noreferrer" class="text-xs text-rose-400 hover:text-rose-300 underline font-medium">
+            <a id="headerSourceLink" href="#" target="_blank" rel="noopener noreferrer" class="text-xs text-rose-600 hover:text-rose-700 underline font-semibold">
               Watch on YouTube ↗
             </a>
           </div>
-          <h1 id="headerTitle" class="text-xl sm:text-2xl font-bold text-white print-text-dark"></h1>
-          <p id="headerSubtitle" class="text-sm text-slate-300 leading-relaxed print-text-dark"></p>
+          <h1 id="headerTitle" class="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight print-text-dark"></h1>
+          <p id="headerSubtitle" class="text-sm sm:text-[15px] text-slate-600 leading-relaxed print-text-dark"></p>
         </div>
 
         <!-- KPIs -->
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full lg:w-auto shrink-0">
-          <div class="bg-slate-950/90 border border-slate-800 rounded-xl p-3.5 text-center print-card">
-            <div class="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">Total Videos</div>
-            <div id="kpiVideoCount" class="text-lg font-bold text-white mt-0.5 mono print-text-dark">3</div>
+          <div class="bg-slate-50/90 border border-slate-200/90 rounded-xl p-3.5 text-center shadow-xs print-card">
+            <div class="text-[11px] uppercase tracking-wider text-slate-500 font-bold">Total Videos</div>
+            <div id="kpiVideoCount" class="text-lg font-extrabold text-slate-900 mt-0.5 mono print-text-dark">3</div>
           </div>
-          <div class="bg-slate-950/90 border border-slate-800 rounded-xl p-3.5 text-center print-card">
-            <div class="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">Full Watch Time</div>
-            <div id="kpiTotalDuration" class="text-lg font-bold text-rose-400 mt-0.5 mono">3h 47m</div>
+          <div class="bg-slate-50/90 border border-slate-200/90 rounded-xl p-3.5 text-center shadow-xs print-card">
+            <div class="text-[11px] uppercase tracking-wider text-slate-500 font-bold">Full Watch Time</div>
+            <div id="kpiTotalDuration" class="text-lg font-extrabold text-rose-600 mt-0.5 mono">3h 47m</div>
           </div>
-          <div class="bg-slate-950/90 border border-slate-800 rounded-xl p-3.5 text-center print-card">
-            <div class="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">At 1.5x Speed</div>
-            <div id="kpiSpeed15" class="text-lg font-bold text-emerald-400 mt-0.5 mono">2h 31m</div>
+          <div class="bg-slate-50/90 border border-slate-200/90 rounded-xl p-3.5 text-center shadow-xs print-card">
+            <div class="text-[11px] uppercase tracking-wider text-slate-500 font-bold">At 1.5x Speed</div>
+            <div id="kpiSpeed15" class="text-lg font-extrabold text-emerald-600 mt-0.5 mono">2h 31m</div>
           </div>
-          <div class="bg-slate-950/90 border border-slate-800 rounded-xl p-3.5 text-center print-card">
-            <div class="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">Study Guide Read</div>
-            <div id="kpiReadTime" class="text-lg font-bold text-amber-400 mt-0.5 mono">6m 30s</div>
+          <div class="bg-slate-50/90 border border-slate-200/90 rounded-xl p-3.5 text-center shadow-xs print-card">
+            <div class="text-[11px] uppercase tracking-wider text-slate-500 font-bold">Study Guide Read</div>
+            <div id="kpiReadTime" class="text-lg font-extrabold text-amber-600 mt-0.5 mono">6m 30s</div>
           </div>
         </div>
       </div>
 
       <!-- Playlist Lecture Switcher & On-Demand AI Summarizer Bar (Supports 42+ Videos!) -->
-      <div id="globalLectureBar" class="mt-5 pt-4 border-t border-slate-800/90 space-y-3 no-print">
+      <div id="globalLectureBar" class="mt-5 pt-4 border-t border-slate-200/90 space-y-3 no-print">
         <div class="flex flex-wrap items-center justify-between gap-2">
           <div class="flex items-center gap-2">
-            <span class="text-xs font-semibold uppercase tracking-wider text-slate-300">Playlist Lectures (<span id="playlistTotalCountLabel">0</span> Total):</span>
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-700">Playlist Lectures (<span id="playlistTotalCountLabel">0</span> Total):</span>
             <span class="text-[11px] text-slate-400">Click any lecture (#1 to #N) to view or auto-summarize its full transcript</span>
           </div>
           <div class="flex items-center gap-2">
@@ -247,7 +253,7 @@
             <button
               id="btnBatchSummarizeNext"
               onclick="batchSummarizeNextLectures(3)"
-              class="px-3 py-1.5 rounded-lg bg-indigo-600/25 hover:bg-indigo-600/40 text-indigo-200 border border-indigo-500/40 text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
+              class="px-3 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 shadow-xs text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
             >
               <span>⚡ Batch Summarize Next 3 Lectures</span>
             </button>
@@ -258,39 +264,39 @@
     </section>
 
     <!-- Main Navigation Tabs -->
-    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3 no-print">
+    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-3 no-print">
       <div class="flex flex-wrap gap-2">
         <button id="tabBtnNotes" onclick="switchMainTab('notes')" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-rose-600 text-white shadow transition">
           📚 Deep Lecture Notes (What's Taught)
         </button>
-        <button id="tabBtnExam" onclick="switchMainTab('exam')" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 transition">
+        <button id="tabBtnExam" onclick="switchMainTab('exam')" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-white text-slate-600 border border-slate-200/90 hover:bg-slate-100 hover:text-slate-900 shadow-xs transition cursor-pointer">
           🎓 Exam Revision & Model Q&A
         </button>
-        <button id="tabBtnInterview" onclick="switchMainTab('interview')" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 transition">
+        <button id="tabBtnInterview" onclick="switchMainTab('interview')" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-white text-slate-600 border border-slate-200/90 hover:bg-slate-100 hover:text-slate-900 shadow-xs transition cursor-pointer">
           💼 Interview Prep & Flashcards
         </button>
-        <button id="tabBtnChapters" onclick="switchMainTab('chapters')" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 transition">
+        <button id="tabBtnChapters" onclick="switchMainTab('chapters')" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-white text-slate-600 border border-slate-200/90 hover:bg-slate-100 hover:text-slate-900 shadow-xs transition cursor-pointer">
           ⏱️ Video Chapters & Player
         </button>
-        <button id="tabBtnRollup" onclick="switchMainTab('rollup')" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 transition">
+        <button id="tabBtnRollup" onclick="switchMainTab('rollup')" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-white text-slate-600 border border-slate-200/90 hover:bg-slate-100 hover:text-slate-900 shadow-xs transition cursor-pointer">
           🗂️ All Playlist Videos & Course Rollup
         </button>
-        <button id="tabBtnCalculator" onclick="switchMainTab('calculator')" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 transition">
+        <button id="tabBtnCalculator" onclick="switchMainTab('calculator')" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-white text-slate-600 border border-slate-200/90 hover:bg-slate-100 hover:text-slate-900 shadow-xs transition cursor-pointer">
           🧮 Duration Calculator
         </button>
       </div>
     </div>
 
     <!-- On-Demand Summarization Loading Overlay Card -->
-    <div id="onDemandLoadingBanner" class="hidden bg-indigo-950/80 border border-indigo-500/40 rounded-2xl p-5 flex items-center justify-between gap-4 no-print">
+    <div id="onDemandLoadingBanner" class="hidden bg-indigo-50 border border-indigo-200 rounded-2xl p-5 flex items-center justify-between gap-4 shadow-sm no-print">
       <div class="flex items-center gap-3">
-        <svg class="w-5 h-5 text-indigo-400 animate-spin shrink-0" fill="none" viewBox="0 0 24 24">
+        <svg class="w-5 h-5 text-indigo-600 animate-spin shrink-0" fill="none" viewBox="0 0 24 24">
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
         </svg>
         <div>
-          <div id="onDemandLoadingTitle" class="text-sm font-bold text-white">Extracting Spoken Transcript & Generating AI Lecture Notes...</div>
-          <div class="text-xs text-indigo-200">Fetching captions via YouTube Innertube API and synthesizing concepts, formulas, exam Q&As, and interview flashcards</div>
+          <div id="onDemandLoadingTitle" class="text-sm font-bold text-indigo-950">Extracting Spoken Transcript & Generating AI Lecture Notes...</div>
+          <div class="text-xs text-indigo-700 font-medium">Fetching captions via YouTube Innertube API and synthesizing concepts, formulas, exam Q&As, and interview flashcards</div>
         </div>
       </div>
     </div>
@@ -299,54 +305,54 @@
     <!-- TAB 1: DEEP LECTURE NOTES (WHAT IS TAUGHT INSIDE THE VIDEO)         -->
     <!-- =================================================================== -->
     <section id="tabPanelNotes" class="space-y-6">
-      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 space-y-3 print-card">
+      <div class="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-sm space-y-4 print-card">
         <div class="flex flex-wrap items-center justify-between gap-2">
           <div class="flex flex-wrap items-center gap-2">
-            <span id="notesVideoBadge" class="px-2.5 py-1 rounded-md text-xs font-semibold bg-rose-500/20 text-rose-300 border border-rose-500/30">
+            <span id="notesVideoBadge" class="px-2.5 py-1 rounded-md text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200">
               Lecture #1 Study Notes
             </span>
-            <span id="notesAiModelBadge" class="px-2.5 py-1 rounded-md text-xs font-semibold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+            <span id="notesAiModelBadge" class="px-2.5 py-1 rounded-md text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
               AI Study Guide
             </span>
           </div>
-          <span id="notesTranscriptStatus" class="text-xs text-emerald-400 mono bg-emerald-500/10 px-2.5 py-1 rounded-md border border-emerald-500/20">
+          <span id="notesTranscriptStatus" class="text-xs text-emerald-700 font-semibold mono bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-200">
             ✓ Spoken Transcript Analyzed
           </span>
         </div>
-        <h2 id="notesVideoTitle" class="text-lg sm:text-xl font-bold text-white print-text-dark"></h2>
-        <p id="notesExecSummary" class="text-sm text-slate-200 leading-relaxed print-text-dark"></p>
+        <h2 id="notesVideoTitle" class="text-xl sm:text-2xl font-extrabold text-slate-900 print-text-dark"></h2>
+        <p id="notesExecSummary" class="text-[15px] text-slate-700 leading-relaxed print-text-dark"></p>
 
         <!-- Key Takeaways List right inside Executive Summary Card -->
-        <div class="pt-3 border-t border-slate-800/80">
-          <h3 class="text-xs font-semibold uppercase tracking-wider text-rose-400 mb-2">Key Lecture Takeaways</h3>
-          <ul id="notesKeyTakeawaysList" class="space-y-1.5 text-xs sm:text-sm text-slate-200 print-text-dark"></ul>
+        <div class="pt-3 border-t border-slate-200/80">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-rose-600 mb-2.5">Key Lecture Takeaways</h3>
+          <ul id="notesKeyTakeawaysList" class="space-y-2 text-sm text-slate-700 print-text-dark"></ul>
         </div>
       </div>
 
       <!-- 1. Core Concepts & Theory Taught Step-by-Step -->
-      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 space-y-4 print-card">
+      <div class="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-sm space-y-5 print-card">
         <div>
-          <h3 class="text-base font-bold text-white flex items-center gap-2 print-text-dark">
+          <h3 class="text-base sm:text-lg font-extrabold text-slate-900 flex items-center gap-2.5 print-text-dark">
             <span class="w-2 h-5 rounded-full bg-rose-500"></span>
             <span>Core Concepts, Theory & Mechanisms Taught in This Video</span>
           </h3>
-          <p class="text-xs text-slate-400 mt-0.5">Step-by-step teaching breakdown of what the instructor explains inside the video</p>
+          <p class="text-xs text-slate-500 font-medium mt-0.5">Step-by-step teaching breakdown of what the instructor explains inside the video</p>
         </div>
         <div id="notesCoreConceptsList" class="space-y-4"></div>
       </div>
 
       <!-- 2. Formulas, Equations, Algorithms & Complexity + 3. Worked Examples -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 space-y-4 print-card">
-          <h3 class="text-base font-bold text-white flex items-center gap-2 print-text-dark">
+        <div class="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-sm space-y-5 print-card">
+          <h3 class="text-base sm:text-lg font-extrabold text-slate-900 flex items-center gap-2.5 print-text-dark">
             <span class="w-2 h-5 rounded-full bg-amber-400"></span>
             <span>Formulas, Equations, Algorithms & Complexity</span>
           </h3>
           <div id="notesFormulasList" class="space-y-3.5"></div>
         </div>
 
-        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 space-y-4 print-card">
-          <h3 class="text-base font-bold text-white flex items-center gap-2 print-text-dark">
+        <div class="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-sm space-y-5 print-card">
+          <h3 class="text-base sm:text-lg font-extrabold text-slate-900 flex items-center gap-2.5 print-text-dark">
             <span class="w-2 h-5 rounded-full bg-emerald-400"></span>
             <span>Worked Examples & Real-World Walkthroughs</span>
           </h3>
@@ -355,22 +361,22 @@
       </div>
 
       <!-- 4. Concept Comparison & Trade-Off Table -->
-      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 space-y-4 print-card">
-        <h3 class="text-base font-bold text-white flex items-center gap-2 print-text-dark">
+      <div class="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-sm space-y-5 print-card">
+        <h3 class="text-base sm:text-lg font-extrabold text-slate-900 flex items-center gap-2.5 print-text-dark">
           <span class="w-2 h-5 rounded-full bg-indigo-400"></span>
           <span>Concept Comparison & Trade-Off Matrix (High-Yield for Exams & Interviews)</span>
         </h3>
         <div class="overflow-x-auto">
           <table class="w-full text-left border-collapse text-xs sm:text-sm">
             <thead>
-              <tr class="border-b border-slate-800 text-slate-400 uppercase text-[11px] tracking-wider">
+              <tr class="border-b border-slate-200 text-slate-400 uppercase text-[11px] tracking-wider">
                 <th class="py-3 px-4">Dimension / Aspect</th>
                 <th class="py-3 px-4">Method / Concept A</th>
                 <th class="py-3 px-4">Method / Concept B</th>
                 <th class="py-3 px-4">Exam / Production Verdict</th>
               </tr>
             </thead>
-            <tbody id="notesComparisonTableBody" class="divide-y divide-slate-800/70"></tbody>
+            <tbody id="notesComparisonTableBody" class="divide-y divide-slate-200/80"></tbody>
           </table>
         </div>
       </div>
@@ -381,31 +387,31 @@
     <!-- =================================================================== -->
     <section id="tabPanelExam" class="hidden space-y-6">
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <div class="lg:col-span-7 bg-slate-900/90 border border-slate-800 rounded-2xl p-6 space-y-4 print-card">
+        <div class="lg:col-span-7 bg-white border border-slate-200/90 rounded-2xl p-6 shadow-sm space-y-5 print-card">
           <div class="flex items-center justify-between">
-            <h3 class="text-base font-bold text-white flex items-center gap-2 print-text-dark">
+            <h3 class="text-base sm:text-lg font-extrabold text-slate-900 flex items-center gap-2.5 print-text-dark">
               <span>🎓 High-Yield Exam Cheat Sheet (Must-Memorize Points)</span>
             </h3>
-            <span class="px-2.5 py-0.5 rounded text-xs font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30">Last-Minute Revision</span>
+            <span class="px-2.5 py-0.5 rounded text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200">Last-Minute Revision</span>
           </div>
-          <ul id="examCheatSheetList" class="space-y-3 text-sm text-slate-200 print-text-dark"></ul>
+          <ul id="examCheatSheetList" class="space-y-3 text-sm text-slate-700 print-text-dark"></ul>
         </div>
 
-        <div class="lg:col-span-5 bg-slate-900/90 border border-rose-500/30 rounded-2xl p-6 space-y-4 print-card">
-          <h3 class="text-base font-bold text-rose-300 flex items-center gap-2 print-text-dark">
+        <div class="lg:col-span-5 bg-rose-50/40 border border-rose-200 rounded-2xl p-6 shadow-sm space-y-4 print-card">
+          <h3 class="text-base font-extrabold text-rose-800 flex items-center gap-2 print-text-dark">
             <span>⚠️ Common Exam Traps & Student Mistakes to Avoid</span>
           </h3>
-          <ul id="examTrapsList" class="space-y-3 text-sm text-slate-200 print-text-dark"></ul>
+          <ul id="examTrapsList" class="space-y-3 text-sm text-rose-950 print-text-dark"></ul>
         </div>
       </div>
 
-      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 space-y-4 print-card">
+      <div class="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-sm space-y-5 print-card">
         <div class="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h3 class="text-base font-bold text-white print-text-dark">Likely University Exam Questions & Full-Credit Model Answers</h3>
+            <h3 class="text-base sm:text-lg font-extrabold text-slate-900 print-text-dark">Likely University Exam Questions & Full-Credit Model Answers</h3>
             <p class="text-xs text-slate-400">Test yourself first, then click any question to toggle the step-by-step model answer</p>
           </div>
-          <button onclick="toggleAllExamAnswers(true)" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-200 border border-slate-700 no-print">
+          <button onclick="toggleAllExamAnswers(true)" class="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-semibold text-slate-700 border border-slate-200 no-print cursor-pointer">
             Reveal All Model Answers
           </button>
         </div>
@@ -417,26 +423,26 @@
     <!-- TAB 3: TECHNICAL INTERVIEW PREP & ACTIVE-RECALL FLASHCARDS          -->
     <!-- =================================================================== -->
     <section id="tabPanelInterview" class="hidden space-y-6">
-      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 space-y-4 print-card">
+      <div class="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-sm space-y-5 print-card">
         <div class="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <h3 class="text-base font-bold text-white flex items-center gap-2 print-text-dark">
+            <h3 class="text-base sm:text-lg font-extrabold text-slate-900 flex items-center gap-2.5 print-text-dark">
               <span>💼 High-Probability Interview Questions & Structured Answers</span>
             </h3>
             <p class="text-xs text-slate-400">Each question gives you a crisp 30-second opening pitch, deep technical internals, and follow-up trade-offs</p>
           </div>
-          <span class="px-2.5 py-1 rounded text-xs font-semibold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">STAR + System Trade-Offs</span>
+          <span class="px-2.5 py-1 rounded text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">STAR + System Trade-Offs</span>
         </div>
         <div id="interviewQuestionsContainer" class="space-y-4"></div>
       </div>
 
-      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 space-y-4 print-card">
+      <div class="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-sm space-y-5 print-card">
         <div class="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h3 class="text-base font-bold text-white print-text-dark">🧠 Interactive Active-Recall Flashcards</h3>
+            <h3 class="text-base sm:text-lg font-extrabold text-slate-900 print-text-dark">🧠 Interactive Active-Recall Flashcards</h3>
             <p class="text-xs text-slate-400">Click any card to flip between the question and answer</p>
           </div>
-          <div id="flashcardProgressBadge" class="text-xs font-semibold text-emerald-400 mono bg-emerald-500/10 px-3 py-1 rounded-lg border border-emerald-500/20">
+          <div id="flashcardProgressBadge" class="text-xs font-bold text-emerald-700 mono bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200">
             Click cards to flip & master
           </div>
         </div>
@@ -450,7 +456,7 @@
     <section id="tabPanelChapters" class="hidden space-y-6">
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <div class="lg:col-span-5 space-y-5">
-          <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl no-print">
+          <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm no-print">
             <div class="aspect-video bg-black relative">
               <iframe
                 id="youtubePlayerIframe"
@@ -462,18 +468,18 @@
                 allowfullscreen
               ></iframe>
             </div>
-            <div class="p-4 flex items-center justify-between gap-2 bg-slate-900/95 border-t border-slate-800">
+            <div class="p-4 flex items-center justify-between gap-2 bg-white border-t border-slate-200">
               <div class="truncate">
-                <div id="activePlayerVideoTitle" class="text-sm font-semibold text-white truncate"></div>
-                <div id="activePlayerMeta" class="text-xs text-slate-400"></div>
+                <div id="activePlayerVideoTitle" class="text-sm font-bold text-slate-900 truncate"></div>
+                <div id="activePlayerMeta" class="text-xs text-slate-500 font-medium"></div>
               </div>
-              <a id="activePlayerExternalLink" href="#" target="_blank" rel="noopener noreferrer" class="shrink-0 px-3 py-1.5 rounded-lg bg-rose-500/15 text-rose-300 hover:bg-rose-500/25 border border-rose-500/30 text-xs font-medium">
+              <a id="activePlayerExternalLink" href="#" target="_blank" rel="noopener noreferrer" class="shrink-0 px-3 py-1.5 rounded-lg bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 font-semibold text-xs font-medium">
                 YouTube ↗
               </a>
             </div>
           </div>
 
-          <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 space-y-3 no-print">
+          <div class="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-sm space-y-3 no-print">
             <div class="flex items-center justify-between">
               <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-400">All Lectures in Playlist</h3>
               <span id="selectorCountBadge" class="text-xs text-slate-400 mono"></span>
@@ -483,10 +489,10 @@
         </div>
 
         <div class="lg:col-span-7 space-y-5">
-          <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 space-y-4 print-card">
+          <div class="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-sm space-y-5 print-card">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
-                <h3 class="text-base font-bold text-white print-text-dark">Timestamped Chapter Teaching Breakdowns</h3>
+                <h3 class="text-base sm:text-lg font-extrabold text-slate-900 print-text-dark">Timestamped Chapter Teaching Breakdowns</h3>
                 <p class="text-xs text-slate-400">Detailed chapter explanations of what is taught at each timestamp</p>
               </div>
               <input
@@ -494,7 +500,7 @@
                 type="text"
                 oninput="filterChapters()"
                 placeholder="Search chapter concepts..."
-                class="bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:border-rose-500 outline-none no-print"
+                class="bg-slate-50 focus:bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:border-rose-500 outline-none no-print"
               />
             </div>
             <div id="chapterTakeawaysContainer" class="space-y-3.5"></div>
@@ -509,20 +515,20 @@
     <section id="tabPanelRollup" class="hidden space-y-6">
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div class="lg:col-span-2 space-y-6">
-          <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 space-y-4 print-card">
-            <h2 class="text-base font-bold text-white flex items-center gap-2 print-text-dark">
+          <div class="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-sm space-y-5 print-card">
+            <h2 class="text-base sm:text-lg font-extrabold text-slate-900 flex items-center gap-2.5 print-text-dark">
               <span class="w-2 h-5 rounded-full bg-rose-500"></span>
               <span>Master Course Synthesis Across All Playlist Videos</span>
             </h2>
-            <p id="rollupMasterThesis" class="text-sm text-slate-200 leading-relaxed print-text-dark"></p>
-            <div class="pt-3 border-t border-slate-800/80">
+            <p id="rollupMasterThesis" class="text-[15px] text-slate-700 leading-relaxed print-text-dark"></p>
+            <div class="pt-3 border-t border-slate-200/80">
               <h3 class="text-xs font-semibold uppercase tracking-wider text-rose-400 mb-3">Cross-Lecture Connections</h3>
-              <ul id="rollupCrossTakeaways" class="space-y-2 text-sm text-slate-200 max-h-96 overflow-y-auto pr-2 print-text-dark"></ul>
+              <ul id="rollupCrossTakeaways" class="space-y-2 text-sm text-slate-700 max-h-96 overflow-y-auto pr-2 print-text-dark"></ul>
             </div>
           </div>
 
-          <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 space-y-4 print-card">
-            <h2 class="text-base font-bold text-white flex items-center gap-2 print-text-dark">
+          <div class="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-sm space-y-5 print-card">
+            <h2 class="text-base sm:text-lg font-extrabold text-slate-900 flex items-center gap-2.5 print-text-dark">
               <span class="w-2 h-5 rounded-full bg-indigo-500"></span>
               <span>Curriculum Progression Modules</span>
             </h2>
@@ -531,25 +537,25 @@
         </div>
 
         <div class="space-y-6">
-          <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 space-y-3 print-card">
-            <h2 class="text-base font-bold text-white print-text-dark">⚡ Exam & Interview Study Strategy</h2>
-            <p id="rollupWatchStrategy" class="text-sm text-slate-300 leading-relaxed print-text-dark"></p>
+          <div class="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-sm space-y-4 print-card">
+            <h2 class="text-base sm:text-lg font-extrabold text-slate-900 print-text-dark">⚡ Exam & Interview Study Strategy</h2>
+            <p id="rollupWatchStrategy" class="text-sm text-slate-700 leading-relaxed print-text-dark"></p>
           </div>
-          <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 space-y-3 print-card">
-            <h2 class="text-base font-bold text-white print-text-dark">📖 Course Glossary</h2>
+          <div class="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-sm space-y-4 print-card">
+            <h2 class="text-base sm:text-lg font-extrabold text-slate-900 print-text-dark">📖 Course Glossary</h2>
             <div id="rollupGlossaryList" class="space-y-3"></div>
           </div>
         </div>
       </div>
 
       <!-- Full Grid of All Videos in Playlist (All 42+ Videos!) -->
-      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 space-y-4 print-card">
+      <div class="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-sm space-y-5 print-card">
         <div class="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <h2 class="text-base font-bold text-white print-text-dark">Complete Playlist Catalog (All Videos)</h2>
+            <h2 class="text-base sm:text-lg font-extrabold text-slate-900 print-text-dark">Complete Playlist Catalog (All Videos)</h2>
             <p class="text-xs text-slate-400">Click any lecture card to inspect or generate its full AI Exam & Interview Study Guide</p>
           </div>
-          <span id="rollupCatalogCountBadge" class="text-xs font-semibold text-rose-300 mono"></span>
+          <span id="rollupCatalogCountBadge" class="text-xs font-bold text-rose-600 mono bg-rose-50 px-2.5 py-1 rounded-md border border-rose-200"></span>
         </div>
         <div id="rollupAllVideosGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
       </div>
@@ -559,22 +565,22 @@
     <!-- TAB 6: PLAYLIST DURATION & PLAYBACK SPEED CALCULATOR                -->
     <!-- =================================================================== -->
     <section id="tabPanelCalculator" class="hidden space-y-6">
-      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 space-y-6 print-card">
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+      <div class="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-sm space-y-6 print-card">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-4">
           <div>
-            <h2 class="text-lg font-bold text-white print-text-dark">Interactive Playlist Duration & Speed Calculator</h2>
+            <h2 class="text-lg font-extrabold text-slate-900 print-text-dark">Interactive Playlist Duration & Speed Calculator</h2>
             <p class="text-xs text-slate-400">Plan your exam cramming or interview prep schedule across all videos in the playlist (1x–2x)</p>
           </div>
           <div class="flex flex-wrap items-center gap-3 no-print">
             <div class="flex items-center gap-2 text-xs">
               <label class="text-slate-400 font-medium">From #</label>
-              <input id="calcStartIdx" type="number" min="1" value="1" onchange="recalculateCustomDuration()" class="w-16 bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-white mono text-center" />
+              <input id="calcStartIdx" type="number" min="1" value="1" onchange="recalculateCustomDuration()" class="w-16 bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-900 font-semibold mono text-center" />
             </div>
             <div class="flex items-center gap-2 text-xs">
               <label class="text-slate-400 font-medium">To #</label>
-              <input id="calcEndIdx" type="number" min="1" value="3" onchange="recalculateCustomDuration()" class="w-16 bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-white mono text-center" />
+              <input id="calcEndIdx" type="number" min="1" value="3" onchange="recalculateCustomDuration()" class="w-16 bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-900 font-semibold mono text-center" />
             </div>
-            <button onclick="selectAllPlaylistVideos(true)" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs text-slate-200 border border-slate-700">
+            <button onclick="selectAllPlaylistVideos(true)" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-xs font-semibold text-slate-700 border border-slate-200 cursor-pointer">
               Select All
             </button>
           </div>
@@ -585,7 +591,7 @@
         <div class="overflow-x-auto">
           <table class="w-full text-left border-collapse text-xs sm:text-sm">
             <thead>
-              <tr class="border-b border-slate-800 text-slate-400 uppercase text-[11px] tracking-wider">
+              <tr class="border-b border-slate-200 text-slate-400 uppercase text-[11px] tracking-wider">
                 <th class="py-3 px-3 no-print">Include</th>
                 <th class="py-3 px-3">#</th>
                 <th class="py-3 px-3">Lecture Title</th>
@@ -596,7 +602,7 @@
                 <th class="py-3 px-3 text-right">2.0x</th>
               </tr>
             </thead>
-            <tbody id="durationCalculatorTableBody" class="divide-y divide-slate-800/70"></tbody>
+            <tbody id="durationCalculatorTableBody" class="divide-y divide-slate-200/80"></tbody>
           </table>
         </div>
       </div>
@@ -605,31 +611,31 @@
   </main>
 
   <!-- API & Backend Configuration Modal -->
-  <div id="settingsModal" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 hidden items-center justify-center p-4 no-print">
-    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-lg w-full p-6 space-y-5 shadow-2xl">
-      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+  <div id="settingsModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 hidden items-center justify-center p-4 no-print">
+    <div class="bg-white border border-slate-200 rounded-2xl max-w-lg w-full p-6 space-y-5 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-200 pb-3">
         <div>
           <h3 class="text-base font-bold text-white">Full-Stack Backend & AI Keys Configuration</h3>
           <p class="text-xs text-slate-400">Add BOTH your YouTube Data API v3 Key and your Gemini/OpenAI Key for deep lecture summarization</p>
         </div>
-        <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-white text-lg font-bold">✕</button>
+        <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-slate-700 text-lg font-bold">✕</button>
       </div>
 
       <div class="space-y-4 text-xs">
         <div>
-          <label class="block font-semibold text-slate-300 mb-1">FastAPI Backend Base URL</label>
-          <input id="cfgBackendUrl" type="text" value="http://localhost:8000" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white mono" />
+          <label class="block font-bold text-slate-700 mb-1">FastAPI Backend Base URL</label>
+          <input id="cfgBackendUrl" type="text" value="http://localhost:8000" class="w-full bg-slate-50 focus:bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-900 mono outline-none focus:border-rose-500" />
         </div>
 
         <div>
-          <label class="block font-semibold text-slate-300 mb-1">YouTube Data API v3 Key (Required for Live Video/Playlist Metadata)</label>
-          <input id="cfgYoutubeKey" type="password" placeholder="AIzaSy... (or set YOUTUBE_API_KEY in backend .env)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white mono" />
+          <label class="block font-bold text-slate-700 mb-1">YouTube Data API v3 Key (Required for Live Video/Playlist Metadata)</label>
+          <input id="cfgYoutubeKey" type="password" placeholder="AIzaSy... (or set YOUTUBE_API_KEY in backend .env)" class="w-full bg-slate-50 focus:bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-900 mono outline-none focus:border-rose-500" />
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
-            <label class="block font-semibold text-slate-300 mb-1">LLM Provider</label>
-            <select id="cfgLlmProvider" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white">
+            <label class="block font-bold text-slate-700 mb-1">LLM Provider</label>
+            <select id="cfgLlmProvider" class="w-full bg-slate-50 focus:bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-900 outline-none focus:border-rose-500">
               <option value="gemini" selected>Google AI Free Pool (Gemini + Gemma 3)</option>
               <option value="groq">Groq Free Cloud (Llama 3.3 70B)</option>
               <option value="openrouter">OpenRouter Free Models</option>
@@ -637,8 +643,8 @@
             </select>
           </div>
           <div class="sm:col-span-2">
-            <label class="block font-semibold text-emerald-400 mb-1">Gemini / OpenAI API Key (Required for AI Study Notes!)</label>
-            <input id="cfgLlmKey" type="password" placeholder="Paste your Google AI Studio Gemini API Key here" class="w-full bg-slate-950 border border-emerald-500/50 rounded-lg px-3 py-2 text-white mono" />
+            <label class="block font-bold text-emerald-700 mb-1">Gemini / OpenAI API Key (Required for AI Study Notes!)</label>
+            <input id="cfgLlmKey" type="password" placeholder="Paste your Google AI Studio Gemini API Key here" class="w-full bg-emerald-50/40 focus:bg-white border border-emerald-400 rounded-lg px-3 py-2 text-slate-900 mono outline-none focus:border-emerald-600" />
           </div>
         </div>
         <p class="text-[11px] text-slate-400">
@@ -646,8 +652,8 @@
         </p>
       </div>
 
-      <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-800">
-        <button onclick="closeSettingsModal()" class="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-300">Cancel</button>
+      <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-200">
+        <button onclick="closeSettingsModal()" class="px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-xs font-semibold text-slate-700">Cancel</button>
         <button onclick="saveSettingsModal()" class="px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-500 text-xs font-semibold text-white">Save Configuration</button>
       </div>
     </div>
@@ -1655,15 +1661,15 @@
 
     function showStatusBanner(msg, type = "info") {
       const banner = document.getElementById("statusAlert");
-      banner.classList.remove("hidden", "bg-rose-500/15", "border-rose-500/30", "text-rose-200", "bg-emerald-500/15", "border-emerald-500/30", "text-emerald-200", "bg-indigo-500/15", "border-indigo-500/30", "text-indigo-200", "bg-amber-500/15", "border-amber-500/30", "text-amber-200");
+      banner.classList.remove("hidden", "bg-rose-50", "border-rose-200", "text-rose-800", "bg-emerald-50", "border-emerald-200", "text-emerald-800", "bg-indigo-50", "border-indigo-200", "text-indigo-800", "bg-amber-50", "border-amber-200", "text-amber-800");
       if (type === "error") {
-        banner.classList.add("bg-rose-500/15", "border-rose-500/30", "text-rose-200");
+        banner.classList.add("bg-rose-50", "border-rose-200", "text-rose-800", "font-medium");
       } else if (type === "success") {
-        banner.classList.add("bg-emerald-500/15", "border-emerald-500/30", "text-emerald-200");
+        banner.classList.add("bg-emerald-50", "border-emerald-200", "text-emerald-800", "font-medium");
       } else if (type === "warn") {
-        banner.classList.add("bg-amber-500/15", "border-amber-500/30", "text-amber-200");
+        banner.classList.add("bg-amber-50", "border-amber-200", "text-amber-800", "font-medium");
       } else {
-        banner.classList.add("bg-indigo-500/15", "border-indigo-500/30", "text-indigo-200");
+        banner.classList.add("bg-indigo-50", "border-indigo-200", "text-indigo-800", "font-medium");
       }
       banner.textContent = msg;
     }
@@ -1703,16 +1709,16 @@
       const pill = document.getElementById("detectedTypePill");
       if (parsed.videoId && parsed.playlistId) {
         pill.textContent = "Video + Playlist";
-        pill.className = "absolute right-2.5 px-2 py-1 rounded-md text-[10px] font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30";
+        pill.className = "absolute right-2.5 px-2 py-1 rounded-md text-[10px] font-semibold bg-amber-50 text-amber-800 border border-amber-200";
       } else if (parsed.detectedType === "playlist") {
         pill.textContent = "Playlist";
-        pill.className = "absolute right-2.5 px-2 py-1 rounded-md text-[10px] font-semibold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30";
+        pill.className = "absolute right-2.5 px-2 py-1 rounded-md text-[10px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200";
       } else if (parsed.detectedType === "video") {
         pill.textContent = "Single Video";
-        pill.className = "absolute right-2.5 px-2 py-1 rounded-md text-[10px] font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30";
+        pill.className = "absolute right-2.5 px-2 py-1 rounded-md text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200";
       } else {
         pill.textContent = "Enter URL";
-        pill.className = "absolute right-2.5 px-2 py-1 rounded-md text-[10px] font-semibold bg-slate-800 text-slate-400 border border-slate-700";
+        pill.className = "absolute right-2.5 px-2 py-1 rounded-md text-[10px] font-semibold bg-slate-100 text-slate-600 border border-slate-200";
       }
     }
 
@@ -2030,7 +2036,7 @@
             class="shrink-0 px-3 py-1.5 rounded-xl text-xs font-semibold border transition flex items-center gap-2 ${
               active
                 ? 'bg-rose-600 text-white border-rose-500 shadow'
-                : 'bg-slate-950 text-slate-300 border-slate-800 hover:bg-slate-800'
+                : 'bg-slate-50 text-slate-700 border-slate-200/90 hover:bg-white hover:border-rose-300 hover:text-slate-900 shadow-2xs'
             }"
           >
             <span class="w-2 h-2 rounded-full ${isReady ? 'bg-emerald-400' : 'bg-amber-400'}"></span>
@@ -2076,10 +2082,10 @@
       const aiBadge = document.getElementById("notesAiModelBadge");
       if (vsum.is_ai_generated) {
         aiBadge.textContent = `✓ ${vsum.llm_status || 'AI Deep Study Notes'}`;
-        aiBadge.className = "px-2.5 py-1 rounded-md text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30";
+        aiBadge.className = "px-2.5 py-1 rounded-md text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200";
       } else {
         aiBadge.textContent = vsum.llm_status || "Transcript / Topic Notes (Click '✨ Deep AI Summarize')";
-        aiBadge.className = "px-2.5 py-1 rounded-md text-xs font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30";
+        aiBadge.className = "px-2.5 py-1 rounded-md text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200";
       }
 
       document.getElementById("notesTranscriptStatus").textContent = `✓ ${vid.transcript_status || 'Transcript Processed'}${vid.transcript_word_count ? ` (${vid.transcript_word_count.toLocaleString()} words)` : ''}`;
@@ -2105,88 +2111,101 @@
       }));
 
       document.getElementById("notesCoreConceptsList").innerHTML = concepts.map((c, cIdx) => `
-        <div class="bg-slate-950/90 border border-slate-800/90 rounded-xl p-5 space-y-3 print-card">
+        <div class="bg-slate-50/70 hover:bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 space-y-3.5 shadow-xs transition print-card">
           <div class="flex flex-wrap items-center justify-between gap-2">
-            <div class="flex items-center gap-2.5">
-              <span class="w-6 h-6 rounded-lg bg-rose-500/20 text-rose-300 border border-rose-500/30 text-xs font-bold flex items-center justify-center mono">
+            <div class="flex items-center gap-3">
+              <span class="w-7 h-7 rounded-lg bg-rose-600 text-white text-xs font-bold flex items-center justify-center mono shadow-xs">
                 ${cIdx + 1}
               </span>
-              <h4 class="text-sm sm:text-base font-bold text-white print-text-dark">${escapeHtml(c.concept)}</h4>
+              <h4 class="text-base sm:text-lg font-extrabold text-slate-900 print-text-dark">${escapeHtml(c.concept)}</h4>
             </div>
             ${c.timestamp ? `
               <a
                 href="https://www.youtube.com/watch?v=${vid.video_id}&t=${c.start_seconds || 0}s"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-rose-500/20 text-rose-300 border border-slate-700 text-xs mono font-semibold transition"
+                class="px-3 py-1 rounded-full bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs mono font-semibold transition"
               >
                 ▶ Taught @ ${escapeHtml(c.timestamp)} ↗
               </a>
-            ` : ''}
+            ` : ""}
           </div>
-          <p class="text-xs sm:text-sm text-slate-200 leading-relaxed print-text-dark">${escapeHtml(c.explanation)}</p>
+          <p class="text-sm sm:text-[15px] text-slate-700 leading-relaxed print-text-dark">${escapeHtml(c.explanation)}</p>
           ${c.code_example ? `
-            <div class="bg-slate-900 border border-slate-700/80 rounded-xl p-3.5 overflow-x-auto">
-              <div class="text-[10px] font-semibold uppercase tracking-wider text-amber-400 mb-1.5 mono">Code / Implementation Example</div>
-              <pre class="text-xs text-emerald-300 mono leading-relaxed whitespace-pre-wrap print-text-dark"><code>${escapeHtml(c.code_example)}</code></pre>
+            <div class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-sm">
+              <div class="bg-slate-800/95 px-4 py-2 flex items-center justify-between border-b border-slate-700/80">
+                <div class="flex items-center gap-2">
+                  <span class="w-2.5 h-2.5 rounded-full bg-rose-400"></span>
+                  <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+                  <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+                  <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-300 ml-1.5 mono">Code / Implementation Example</span>
+                </div>
+                <button
+                  onclick="copyCodeSnippet(this)"
+                  class="px-2.5 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-[11px] font-semibold text-white transition cursor-pointer"
+                >
+                  📋 Copy Code
+                </button>
+              </div>
+              <pre class="p-4 text-xs sm:text-[13px] text-emerald-300 mono leading-relaxed overflow-x-auto whitespace-pre-wrap print-text-dark"><code>${escapeHtml(c.code_example)}</code></pre>
             </div>
-          ` : ''}
+          ` : ""}
           ${(c.key_points && c.key_points.length) ? `
-            <ul class="space-y-1.5 pt-2 border-t border-slate-800/70">
+            <ul class="space-y-2 pt-3 border-t border-slate-200/80">
               ${c.key_points.map(kp => `
-                <li class="text-xs text-slate-300 flex items-start gap-2 print-text-dark">
-                  <span class="text-emerald-400 font-bold">✦</span>
-                  <span>${escapeHtml(kp)}</span>
+                <li class="text-xs sm:text-sm text-slate-700 flex items-start gap-2.5 print-text-dark">
+                  <span class="text-emerald-600 font-bold mt-0.5">✦</span>
+                  <span class="leading-relaxed">${escapeHtml(kp)}</span>
                 </li>
               `).join("")}
             </ul>
-          ` : ''}
+          ` : ""}
         </div>
       `).join("");
 
       const formulas = notes.formulas_and_algorithms || [];
       document.getElementById("notesFormulasList").innerHTML = formulas.length ? formulas.map(f => `
-        <div class="bg-slate-950/90 border border-slate-800 rounded-xl p-4 space-y-2 print-card">
-          <div class="text-xs font-bold text-amber-300 uppercase tracking-wider">${escapeHtml(f.name)}</div>
-          <div class="bg-slate-900 border border-slate-800 rounded-lg px-3.5 py-2.5 text-xs sm:text-sm text-white mono overflow-x-auto print-text-dark">
+        <div class="bg-amber-50/40 border border-amber-200/80 rounded-xl p-4 space-y-2.5 print-card">
+          <div class="text-xs font-extrabold text-amber-900 uppercase tracking-wider">${escapeHtml(f.name)}</div>
+          <div class="bg-white border border-amber-200 rounded-lg px-3.5 py-2.5 text-xs sm:text-sm text-slate-900 font-semibold mono overflow-x-auto shadow-2xs print-text-dark">
             ${escapeHtml(f.expression)}
           </div>
-          <div class="text-xs text-slate-300 leading-relaxed print-text-dark">
-            <strong class="text-slate-200">How it works:</strong> ${escapeHtml(f.explanation)}
+          <div class="text-xs sm:text-sm text-slate-700 leading-relaxed print-text-dark">
+            <strong class="text-slate-900">How it works:</strong> ${escapeHtml(f.explanation)}
           </div>
           ${f.when_to_use ? `
-            <div class="text-[11px] text-emerald-400 font-medium">
+            <div class="text-xs text-emerald-700 font-semibold">
               ✓ When to apply: ${escapeHtml(f.when_to_use)}
             </div>
           ` : ''}
         </div>
-      `).join("") : `<div class="text-xs text-slate-400">Click '✨ Deep AI Summarize Current Lecture' to extract symbolic formulas and complexity bounds.</div>`;
+      `).join("") : `<div class="text-xs text-slate-500">Click '✨ Deep AI Summarize Current Lecture' to extract symbolic formulas and design patterns.</div>`;
 
       const examples = notes.worked_examples || [];
       document.getElementById("notesExamplesList").innerHTML = examples.length ? examples.map(ex => `
-        <div class="bg-slate-950/90 border border-slate-800 rounded-xl p-4 space-y-2 print-card">
+        <div class="bg-emerald-50/40 border border-emerald-200/80 rounded-xl p-4 space-y-2.5 print-card">
           <div class="flex items-center justify-between gap-2">
-            <span class="text-xs font-bold text-emerald-300 uppercase tracking-wider">${escapeHtml(ex.title)}</span>
-            ${ex.timestamp ? `<span class="text-xs mono text-slate-400">@ ${escapeHtml(ex.timestamp)}</span>` : ''}
+            <span class="text-xs font-extrabold text-emerald-900 uppercase tracking-wider">${escapeHtml(ex.title)}</span>
+            ${ex.timestamp ? `<span class="text-xs mono text-emerald-700 font-semibold">@ ${escapeHtml(ex.timestamp)}</span>` : ''}
           </div>
-          <div class="text-xs text-slate-300 print-text-dark">
-            <strong class="text-white print-text-dark">Problem / Scenario:</strong> ${escapeHtml(ex.problem)}
+          <div class="text-xs sm:text-sm text-slate-700 print-text-dark">
+            <strong class="text-slate-900 print-text-dark">Problem / Scenario:</strong> ${escapeHtml(ex.problem)}
           </div>
-          <div class="text-xs text-slate-200 leading-relaxed bg-slate-900/80 border border-slate-800/80 rounded-lg p-3 print-text-dark">
-            <strong class="text-emerald-400">Step-by-Step Walkthrough:</strong> ${escapeHtml(ex.step_by_step_solution)}
+          <div class="text-xs sm:text-sm text-slate-700 leading-relaxed bg-white border border-emerald-200/80 rounded-lg p-3.5 shadow-2xs print-text-dark">
+            <strong class="text-emerald-700">Step-by-Step Walkthrough:</strong> ${escapeHtml(ex.step_by_step_solution)}
           </div>
         </div>
-      `).join("") : `<div class="text-xs text-slate-400">No worked examples listed.</div>`;
+      `).join("") : `<div class="text-xs text-slate-500">No worked examples listed.</div>`;
 
       const comparisons = notes.comparison_table || [];
       document.getElementById("notesComparisonTableBody").innerHTML = comparisons.length ? comparisons.map(row => `
-        <tr class="hover:bg-slate-800/30">
-          <td class="py-3 px-4 font-semibold text-rose-300 print-text-dark">${escapeHtml(row.aspect)}</td>
-          <td class="py-3 px-4 text-slate-200 print-text-dark">${escapeHtml(row.approach_a)}</td>
-          <td class="py-3 px-4 text-slate-200 print-text-dark">${escapeHtml(row.approach_b)}</td>
-          <td class="py-3 px-4 text-emerald-300 font-medium print-text-dark">${escapeHtml(row.verdict)}</td>
+        <tr class="hover:bg-slate-50/90 transition">
+          <td class="py-3.5 px-4 font-bold text-slate-900 print-text-dark">${escapeHtml(row.aspect)}</td>
+          <td class="py-3.5 px-4 text-slate-700 print-text-dark">${escapeHtml(row.approach_a)}</td>
+          <td class="py-3.5 px-4 text-slate-700 print-text-dark">${escapeHtml(row.approach_b)}</td>
+          <td class="py-3.5 px-4 text-emerald-700 font-semibold bg-emerald-50/40 print-text-dark">${escapeHtml(row.verdict)}</td>
         </tr>
-      `).join("") : `<tr><td colspan="4" class="py-4 px-4 text-xs text-slate-400">No comparison rows available.</td></tr>`;
+      `).join("") : `<tr><td colspan="4" class="py-4 px-4 text-xs text-slate-500">No comparison rows available.</td></tr>`;
     }
 
     // -----------------------------------------------------------------------
@@ -2198,25 +2217,25 @@
 
       const cheatPoints = exam.cheat_sheet_points || vsum.key_takeaways || [];
       document.getElementById("examCheatSheetList").innerHTML = cheatPoints.map(pt => `
-        <li class="flex items-start gap-2.5 bg-slate-950/80 border border-slate-800/80 rounded-xl p-3.5">
-          <span class="text-amber-400 font-bold mt-0.5">★</span>
-          <span class="leading-relaxed">${escapeHtml(pt)}</span>
+        <li class="flex items-start gap-2.5 bg-amber-50/50 border border-amber-200/80 rounded-xl p-3.5">
+          <span class="text-amber-600 font-bold mt-0.5">★</span>
+          <span class="leading-relaxed text-slate-800">${escapeHtml(pt)}</span>
         </li>
       `).join("");
 
       const traps = exam.common_exam_traps || ["Verify all assumptions and boundary cases before applying formulas."];
       document.getElementById("examTrapsList").innerHTML = traps.map(tr => `
-        <li class="flex items-start gap-2.5 bg-rose-500/10 border border-rose-500/20 rounded-xl p-3.5">
-          <span class="text-rose-400 font-bold mt-0.5">!</span>
-          <span class="leading-relaxed">${escapeHtml(tr)}</span>
+        <li class="flex items-start gap-2.5 bg-white border border-rose-200 rounded-xl p-3.5 shadow-2xs">
+          <span class="text-rose-600 font-bold mt-0.5">⚠️</span>
+          <span class="leading-relaxed text-slate-800">${escapeHtml(tr)}</span>
         </li>
       `).join("");
 
       const questions = exam.exam_questions || [];
       if (!questions.length) {
         document.getElementById("examQuestionsContainer").innerHTML = `
-          <div class="bg-slate-950/90 border border-slate-800 rounded-xl p-5 text-center space-y-3">
-            <div class="text-sm font-semibold text-slate-200">Exam Q&As have not been generated for this lecture yet.</div>
+          <div class="bg-slate-50 border border-slate-200 rounded-xl p-6 text-center space-y-3">
+            <div class="text-sm font-semibold text-slate-700">Exam Q&As have not been generated for this lecture yet.</div>
             <button onclick="summarizeSpecificVideoOnDemand(activeVideoIndex, true)" class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold shadow cursor-pointer">
               ✨ Click to Summarize This Lecture Now
             </button>
@@ -2224,21 +2243,21 @@
         return;
       }
       document.getElementById("examQuestionsContainer").innerHTML = questions.map((q, qIdx) => `
-        <div class="bg-slate-950/90 border border-slate-800 rounded-xl p-5 space-y-3 print-card">
+        <div class="bg-slate-50/70 border border-slate-200 rounded-2xl p-5 space-y-3.5 shadow-2xs print-card">
           <div class="flex flex-wrap items-center justify-between gap-2">
-            <span class="px-2.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-xs font-semibold">
-              Exam Question #${qIdx + 1} • ${escapeHtml(q.difficulty || 'University Exam')}
+            <span class="px-2.5 py-1 rounded-md bg-indigo-50 text-indigo-700 border border-indigo-200 text-xs font-bold">
+              Exam Question #${qIdx + 1} • ${escapeHtml(q.difficulty || "University Exam")}
             </span>
             <button
               onclick="toggleSingleExamAnswer(${qIdx})"
-              class="text-xs font-semibold text-rose-400 hover:text-rose-300 no-print"
+              class="text-xs font-bold text-rose-600 hover:text-rose-700 no-print cursor-pointer"
             >
               Show / Hide Model Solution
             </button>
           </div>
-          <h4 class="text-sm sm:text-base font-bold text-white leading-snug print-text-dark">${escapeHtml(q.question)}</h4>
-          <div id="examAnswerBox_${qIdx}" class="bg-slate-900 border border-emerald-500/30 rounded-xl p-4 text-xs sm:text-sm text-slate-200 leading-relaxed space-y-1 print-text-dark">
-            <div class="text-xs font-bold uppercase tracking-wider text-emerald-400 mb-1">✓ Full-Credit Step-by-Step Model Answer</div>
+          <h4 class="text-sm sm:text-base font-extrabold text-slate-900 leading-snug print-text-dark">${escapeHtml(q.question)}</h4>
+          <div id="examAnswerBox_${qIdx}" class="bg-emerald-50/60 border border-emerald-200 rounded-xl p-4 text-xs sm:text-sm text-slate-800 leading-relaxed space-y-1.5 print-text-dark">
+            <div class="text-xs font-extrabold uppercase tracking-wider text-emerald-800 mb-1">✓ Full-Credit Step-by-Step Model Answer</div>
             <div>${escapeHtml(q.model_answer)}</div>
           </div>
         </div>
@@ -2267,8 +2286,8 @@
       const iqs = interview.interview_questions || [];
       if (!iqs.length) {
         document.getElementById("interviewQuestionsContainer").innerHTML = `
-          <div class="bg-slate-950/90 border border-slate-800 rounded-xl p-5 text-center space-y-3">
-            <div class="text-sm font-semibold text-slate-200">Interview Q&As have not been generated for this lecture yet.</div>
+          <div class="bg-slate-50 border border-slate-200 rounded-xl p-6 text-center space-y-3">
+            <div class="text-sm font-semibold text-slate-700">Interview Q&As have not been generated for this lecture yet.</div>
             <button onclick="summarizeSpecificVideoOnDemand(activeVideoIndex, true)" class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold shadow cursor-pointer">
               ✨ Click to Summarize This Lecture Now
             </button>
@@ -2277,29 +2296,29 @@
         return;
       }
       document.getElementById("interviewQuestionsContainer").innerHTML = iqs.map((iq, idx) => `
-        <div class="bg-slate-950/90 border border-slate-800 rounded-xl p-5 space-y-3.5 print-card">
+        <div class="bg-slate-50/70 border border-slate-200 rounded-2xl p-5 space-y-4 shadow-2xs print-card">
           <div class="flex flex-wrap items-center justify-between gap-2">
-            <span class="px-2.5 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30 text-xs font-semibold">
+            <span class="px-2.5 py-1 rounded-md bg-rose-50 text-rose-700 border border-rose-200 text-xs font-bold">
               Interview Q#${idx + 1}
             </span>
-            <span class="px-2.5 py-0.5 rounded bg-slate-800 text-slate-300 text-xs mono">
-              ${escapeHtml(iq.topic_tag || 'Technical Interview')}
+            <span class="px-2.5 py-1 rounded-md bg-slate-200/70 text-slate-700 font-semibold text-xs mono">
+              ${escapeHtml(iq.topic_tag || "Technical Interview")}
             </span>
           </div>
-          <h4 class="text-sm sm:text-base font-bold text-white print-text-dark">"${escapeHtml(iq.question)}"</h4>
+          <h4 class="text-base font-extrabold text-slate-900 print-text-dark">"${escapeHtml(iq.question)}"</h4>
 
-          <div class="grid grid-cols-1 lg:grid-cols-3 gap-3 pt-1">
-            <div class="bg-emerald-500/10 border border-emerald-500/25 rounded-xl p-3.5 space-y-1">
-              <div class="text-xs font-bold text-emerald-300 uppercase tracking-wider">⚡ 30-Second Elevator Answer</div>
-              <p class="text-xs text-slate-200 leading-relaxed print-text-dark">${escapeHtml(iq.elevator_pitch_30s)}</p>
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-3.5 pt-1">
+            <div class="bg-emerald-50/70 border border-emerald-200 rounded-xl p-4 space-y-1.5">
+              <div class="text-xs font-extrabold text-emerald-800 uppercase tracking-wider">⚡ 30-Second Elevator Answer</div>
+              <p class="text-xs sm:text-sm text-slate-700 leading-relaxed print-text-dark">${escapeHtml(iq.elevator_pitch_30s)}</p>
             </div>
-            <div class="bg-indigo-500/10 border border-indigo-500/25 rounded-xl p-3.5 space-y-1">
-              <div class="text-xs font-bold text-indigo-300 uppercase tracking-wider">🔍 Technical Deep-Dive</div>
-              <p class="text-xs text-slate-200 leading-relaxed print-text-dark">${escapeHtml(iq.deep_dive_answer)}</p>
+            <div class="bg-indigo-50/70 border border-indigo-200 rounded-xl p-4 space-y-1.5">
+              <div class="text-xs font-extrabold text-indigo-800 uppercase tracking-wider">🔍 Technical Deep-Dive</div>
+              <p class="text-xs sm:text-sm text-slate-700 leading-relaxed print-text-dark">${escapeHtml(iq.deep_dive_answer)}</p>
             </div>
-            <div class="bg-amber-500/10 border border-amber-500/25 rounded-xl p-3.5 space-y-1">
-              <div class="text-xs font-bold text-amber-300 uppercase tracking-wider">⚖️ Follow-Up & Trade-Offs</div>
-              <p class="text-xs text-slate-200 leading-relaxed print-text-dark">${escapeHtml(iq.follow_up_tradeoffs)}</p>
+            <div class="bg-amber-50/70 border border-amber-200 rounded-xl p-4 space-y-1.5">
+              <div class="text-xs font-extrabold text-amber-900 uppercase tracking-wider">⚖️ Follow-Up & Trade-Offs</div>
+              <p class="text-xs sm:text-sm text-slate-700 leading-relaxed print-text-dark">${escapeHtml(iq.follow_up_tradeoffs)}</p>
             </div>
           </div>
         </div>
@@ -2313,28 +2332,28 @@
         return `
           <div
             onclick="flipFlashcard(${idx})"
-            class="cursor-pointer bg-slate-950 hover:bg-slate-900 border ${isMastered ? 'border-emerald-500/50' : 'border-slate-800'} rounded-xl p-5 flex flex-col justify-between gap-4 transition select-none print-card"
+            class="cursor-pointer bg-slate-50/80 hover:bg-white border ${isMastered ? "border-emerald-400 ring-2 ring-emerald-500/10" : "border-slate-200/90"} rounded-2xl p-5 flex flex-col justify-between gap-4 shadow-2xs hover:shadow-md transition select-none print-card"
           >
-            <div class="space-y-2">
+            <div class="space-y-2.5">
               <div class="flex items-center justify-between text-[11px]">
-                <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 mono">${escapeHtml(fc.tag || 'Flashcard')}</span>
-                <span id="fcSideLabel_${idx}" class="text-rose-400 font-semibold">QUESTION (Click to Flip)</span>
+                <span class="px-2.5 py-0.5 rounded-md bg-indigo-50 text-indigo-700 font-semibold border border-indigo-200/60 mono">${escapeHtml(fc.tag || "Flashcard")}</span>
+                <span id="fcSideLabel_${idx}" class="text-rose-600 font-bold">QUESTION (Click to Flip)</span>
               </div>
-              <div id="fcFront_${idx}" class="text-sm font-bold text-white leading-relaxed pt-1 print-text-dark">
+              <div id="fcFront_${idx}" class="text-sm sm:text-[15px] font-bold text-slate-900 leading-relaxed pt-1 print-text-dark">
                 ${escapeHtml(fc.front)}
               </div>
-              <div id="fcBack_${idx}" class="hidden text-xs sm:text-sm text-emerald-300 leading-relaxed pt-1 border-t border-slate-800 mt-2 print-text-dark">
-                <strong class="block text-[11px] uppercase text-emerald-400 mb-1">Answer:</strong>
+              <div id="fcBack_${idx}" class="hidden text-xs sm:text-sm text-emerald-900 bg-emerald-50/70 rounded-xl p-3 leading-relaxed border border-emerald-200 mt-2 print-text-dark">
+                <strong class="block text-[11px] uppercase text-emerald-700 mb-1">Answer:</strong>
                 ${escapeHtml(fc.back)}
               </div>
             </div>
-            <div class="flex items-center justify-between pt-2 border-t border-slate-800/80 text-xs no-print">
-              <span class="text-slate-500">Card #${idx + 1}</span>
+            <div class="flex items-center justify-between pt-2.5 border-t border-slate-200/80 text-xs no-print">
+              <span class="text-slate-500 font-medium">Card #${idx + 1}</span>
               <button
                 onclick="event.stopPropagation(); toggleMasteredCard('${key}', ${cards.length})"
-                class="px-2.5 py-1 rounded-md text-xs font-semibold ${isMastered ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-slate-800 text-slate-400 hover:text-white'}"
+                class="px-2.5 py-1 rounded-md text-xs font-bold ${isMastered ? "bg-emerald-100 text-emerald-800 border border-emerald-300" : "bg-slate-200/70 text-slate-600 hover:bg-slate-300/70 hover:text-slate-900"}"
               >
-                ${isMastered ? '✓ Mastered' : 'Mark Mastered'}
+                ${isMastered ? "✓ Mastered" : "Mark Mastered"}
               </button>
             </div>
           </div>
@@ -2350,11 +2369,11 @@
       if (isHidden) {
         back.classList.remove("hidden");
         label.textContent = "ANSWER REVEALED";
-        label.className = "text-emerald-400 font-semibold";
+        label.className = "text-emerald-700 font-bold";
       } else {
         back.classList.add("hidden");
         label.textContent = "QUESTION (Click to Flip)";
-        label.className = "text-rose-400 font-semibold";
+        label.className = "text-rose-600 font-bold";
       }
     }
 
@@ -2387,18 +2406,18 @@
             onclick="selectVideoForInspection(${idx}, true)"
             class="w-full text-left p-3 rounded-xl border transition flex items-start justify-between gap-3 ${
               isActive
-                ? 'bg-rose-500/15 border-rose-500/50 text-white'
-                : 'bg-slate-950/80 border-slate-800/80 text-slate-300 hover:bg-slate-800/70'
+                ? 'bg-rose-50 border-rose-300 text-slate-900 shadow-2xs'
+                : 'bg-slate-50/70 border-slate-200/80 text-slate-700 hover:bg-white hover:border-slate-300'
             }"
           >
             <div class="flex items-start gap-2.5 min-w-0">
-              <span class="px-2 py-0.5 rounded text-xs font-bold mono ${isActive ? 'bg-rose-500 text-white' : 'bg-slate-800 text-slate-400'}">
+              <span class="px-2 py-0.5 rounded text-xs font-bold mono ${isActive ? 'bg-rose-600 text-white' : 'bg-slate-200 text-slate-700'}">
                 ${idx + 1}
               </span>
               <div class="min-w-0">
                 <div class="text-xs font-semibold truncate">${escapeHtml(v.title)}</div>
                 <div class="text-[11px] text-slate-400 mt-0.5">
-                  ${isReady ? '<span class="text-emerald-400">✓ Summarized</span>' : '<span class="text-amber-400">⚡ Click to Summarize</span>'} • ${escapeHtml(v.duration_human)}
+                  ${isReady ? '<span class="text-emerald-700 font-semibold">✓ Summarized</span>' : '<span class="text-amber-700 font-medium">⚡ Click to Summarize</span>'} • ${escapeHtml(v.duration_human)}
                 </div>
               </div>
             </div>
@@ -2424,27 +2443,27 @@
 
       const container = document.getElementById("chapterTakeawaysContainer");
       container.innerHTML = chapters.map(ch => `
-        <div class="bg-slate-950/90 border border-slate-800/90 rounded-xl p-4 space-y-2.5 print-card">
+        <div class="bg-slate-50/70 hover:bg-white border border-slate-200/90 rounded-xl p-4 space-y-2.5 transition print-card">
           <div class="flex flex-wrap items-center justify-between gap-2">
             <div class="flex items-center gap-2.5">
               <button
                 onclick="seekEmbeddedPlayer('${vid.video_id}', ${ch.start_seconds || 0})"
-                class="px-2.5 py-1 rounded-lg bg-rose-500/20 hover:bg-rose-500 text-rose-300 hover:text-white border border-rose-500/30 text-xs font-bold mono flex items-center gap-1.5 transition cursor-pointer"
+                class="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white border border-rose-200 text-xs font-bold mono flex items-center gap-1.5 transition cursor-pointer"
               >
                 <span>▶</span>
                 <span>${escapeHtml(ch.timestamp)}</span>
               </button>
-              <h4 class="text-sm font-bold text-white print-text-dark">${escapeHtml(ch.title)}</h4>
+              <h4 class="text-sm sm:text-base font-extrabold text-slate-900 print-text-dark">${escapeHtml(ch.title)}</h4>
             </div>
-            <a href="${escapeHtml(ch.deep_link)}" target="_blank" rel="noopener noreferrer" class="text-[11px] text-slate-400 hover:text-rose-400 mono underline">
+            <a href="${escapeHtml(ch.deep_link)}" target="_blank" rel="noopener noreferrer" class="text-[11px] text-slate-500 hover:text-rose-600 font-medium mono underline">
               YouTube @ ${escapeHtml(ch.timestamp)} ↗
             </a>
           </div>
-          <p class="text-xs sm:text-sm text-slate-200 leading-relaxed print-text-dark">${escapeHtml(ch.what_is_taught || ch.summary)}</p>
+          <p class="text-xs sm:text-sm text-slate-700 leading-relaxed print-text-dark">${escapeHtml(ch.what_is_taught || ch.summary)}</p>
           <ul class="space-y-1 pl-1 pt-1">
             ${(ch.takeaways || []).map(t => `
-              <li class="text-xs text-slate-300 flex items-start gap-2 print-text-dark">
-                <span class="text-emerald-400 font-bold">✓</span>
+              <li class="text-xs text-slate-600 flex items-start gap-2 print-text-dark">
+                <span class="text-emerald-600 font-bold">✓</span>
                 <span>${escapeHtml(t)}</span>
               </li>
             `).join("")}
@@ -2482,17 +2501,17 @@
       `).join("");
 
       document.getElementById("rollupProgressionList").innerHTML = (rollup.learning_progression || []).map(lp => `
-        <div class="bg-slate-950/90 border border-slate-800/90 rounded-xl p-4 space-y-1.5 print-card">
-          <div class="text-xs font-bold text-indigo-400 uppercase tracking-wider">${escapeHtml(lp.phase)}</div>
-          <p class="text-xs sm:text-sm text-slate-300 leading-relaxed print-text-dark">${escapeHtml(lp.focus)}</p>
+        <div class="bg-indigo-50/40 border border-indigo-200/80 rounded-xl p-4 space-y-1.5 print-card">
+          <div class="text-xs font-extrabold text-indigo-800 uppercase tracking-wider">${escapeHtml(lp.phase)}</div>
+          <p class="text-xs sm:text-sm text-slate-700 leading-relaxed print-text-dark">${escapeHtml(lp.focus)}</p>
         </div>
       `).join("");
 
       document.getElementById("rollupWatchStrategy").textContent = rollup.recommended_watch_strategy || "";
       document.getElementById("rollupGlossaryList").innerHTML = (rollup.glossary_terms || []).map(g => `
-        <div class="bg-slate-950/80 border border-slate-800/80 rounded-xl p-3">
-          <div class="text-xs font-bold text-rose-300">${escapeHtml(g.term)}</div>
-          <div class="text-xs text-slate-300 mt-0.5 leading-relaxed print-text-dark">${escapeHtml(g.definition)}</div>
+        <div class="bg-slate-50 border border-slate-200/80 rounded-xl p-3.5">
+          <div class="text-xs font-extrabold text-rose-700">${escapeHtml(g.term)}</div>
+          <div class="text-xs text-slate-600 mt-1 leading-relaxed print-text-dark">${escapeHtml(g.definition)}</div>
         </div>
       `).join("");
 
@@ -2503,21 +2522,21 @@
         return `
           <div
             onclick="selectVideoForInspection(${idx}, true); switchMainTab('notes');"
-            class="cursor-pointer bg-slate-950/90 hover:bg-slate-900 border ${isReady ? 'border-emerald-500/30' : 'border-slate-800'} hover:border-rose-500/50 rounded-xl p-4 flex flex-col justify-between gap-3 transition print-card"
+            class="cursor-pointer bg-slate-50/70 hover:bg-white border ${isReady ? "border-emerald-300" : "border-slate-200/90"} hover:border-rose-400 hover:shadow-md rounded-2xl p-4 flex flex-col justify-between gap-3 transition print-card"
           >
             <div class="space-y-2">
               <div class="flex items-center justify-between text-xs">
-                <span class="px-2 py-0.5 rounded bg-rose-500/15 text-rose-300 font-bold mono">Lecture #${idx + 1}</span>
-                <span class="text-slate-400 mono">${escapeHtml(v.duration_formatted)}</span>
+                <span class="px-2.5 py-0.5 rounded-md bg-rose-50 text-rose-700 border border-rose-200 font-bold mono">Lecture #${idx + 1}</span>
+                <span class="text-slate-500 font-medium mono">${escapeHtml(v.duration_formatted)}</span>
               </div>
-              <h3 class="text-sm font-bold text-white line-clamp-2 print-text-dark">${escapeHtml(v.title)}</h3>
-              <p class="text-xs text-slate-300 line-clamp-3 leading-relaxed print-text-dark">${escapeHtml(v.summary?.executive_summary || "")}</p>
+              <h3 class="text-sm font-extrabold text-slate-900 line-clamp-2 print-text-dark">${escapeHtml(v.title)}</h3>
+              <p class="text-xs text-slate-600 line-clamp-3 leading-relaxed print-text-dark">${escapeHtml(v.summary?.executive_summary || "")}</p>
             </div>
-            <div class="pt-2 border-t border-slate-800/80 flex items-center justify-between text-[11px]">
-              <span class="${isReady ? 'text-emerald-400 font-semibold' : 'text-amber-400'}">
-                ${isReady ? '✓ Deep Study Notes Ready' : '⚡ Click to Generate AI Notes'}
+            <div class="pt-2.5 border-t border-slate-200/80 flex items-center justify-between text-[11px]">
+              <span class="${isReady ? "text-emerald-700 font-bold" : "text-amber-700 font-semibold"}">
+                ${isReady ? "✓ Deep Study Notes Ready" : "⚡ Click to Generate AI Notes"}
               </span>
-              <span class="text-rose-400 font-semibold">Open Notes →</span>
+              <span class="text-rose-600 font-bold">Open Notes →</span>
             </div>
           </div>
         `;
@@ -2535,10 +2554,10 @@
         const sp = stats.speeds[spKey];
         const isHighlight = spKey === "1.5x";
         return `
-          <div class="rounded-xl p-4 border ${isHighlight ? 'bg-rose-500/10 border-rose-500/40' : 'bg-slate-950/90 border-slate-800'} print-card">
-            <div class="text-xs font-bold uppercase tracking-wider ${isHighlight ? 'text-rose-300' : 'text-slate-400'}">${spKey} Speed</div>
-            <div class="text-xl font-bold text-white mono mt-2 print-text-dark">${sp.watch_formatted}</div>
-            <div class="text-xs text-emerald-400 mt-1 mono">${sp.saved_seconds > 0 ? `Saves ${sp.saved_formatted}` : 'Baseline'}</div>
+          <div class="rounded-xl p-4 border ${isHighlight ? 'bg-rose-50/70 border-rose-300 shadow-xs' : 'bg-slate-50 border-slate-200'} print-card">
+            <div class="text-xs font-extrabold uppercase tracking-wider ${isHighlight ? 'text-rose-700' : 'text-slate-500'}">${spKey} Speed</div>
+            <div class="text-xl font-extrabold text-slate-900 mono mt-2 print-text-dark">${sp.watch_formatted}</div>
+            <div class="text-xs text-emerald-700 font-semibold mt-1 mono">${sp.saved_seconds > 0 ? `Saves ${sp.saved_formatted}` : 'Baseline'}</div>
           </div>
         `;
       }).join("");
@@ -2547,17 +2566,17 @@
         const checked = includedVideoFlags[idx];
         const d = v.duration_seconds;
         return `
-          <tr class="${checked ? 'text-slate-200' : 'text-slate-500 opacity-60'}">
+          <tr class="${checked ? 'text-slate-800 hover:bg-slate-50' : 'text-slate-400 opacity-60'}">
             <td class="py-3 px-3 no-print">
-              <input type="checkbox" ${checked ? 'checked' : ''} onchange="toggleVideoInCalculator(${idx})" class="w-4 h-4 accent-rose-500 rounded cursor-pointer" />
+              <input type="checkbox" ${checked ? 'checked' : ''} onchange="toggleVideoInCalculator(${idx})" class="w-4 h-4 accent-rose-600 rounded cursor-pointer" />
             </td>
-            <td class="py-3 px-3 mono font-semibold">${idx + 1}</td>
-            <td class="py-3 px-3 font-medium">${escapeHtml(v.title)}</td>
+            <td class="py-3 px-3 mono font-bold text-slate-600">${idx + 1}</td>
+            <td class="py-3 px-3 font-semibold text-slate-900">${escapeHtml(v.title)}</td>
             <td class="py-3 px-3 text-right mono">${formatSecondsHms(d)}</td>
             <td class="py-3 px-3 text-right mono">${formatSecondsHms(d / 1.25)}</td>
-            <td class="py-3 px-3 text-right mono text-emerald-400 font-semibold">${formatSecondsHms(d / 1.5)}</td>
+            <td class="py-3 px-3 text-right mono text-emerald-700 font-bold">${formatSecondsHms(d / 1.5)}</td>
             <td class="py-3 px-3 text-right mono">${formatSecondsHms(d / 1.75)}</td>
-            <td class="py-3 px-3 text-right mono text-indigo-300">${formatSecondsHms(d / 2.0)}</td>
+            <td class="py-3 px-3 text-right mono text-indigo-700 font-semibold">${formatSecondsHms(d / 2.0)}</td>
           </tr>
         `;
       }).join("");
@@ -2715,10 +2734,10 @@
         if (!panel || !btn) return;
         if (t === tabName) {
           panel.classList.remove("hidden");
-          btn.className = "px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-rose-600 text-white shadow transition";
+          btn.className = "px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-rose-600 text-white shadow-sm transition cursor-pointer";
         } else {
           panel.classList.add("hidden");
-          btn.className = "px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 transition";
+          btn.className = "px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-white text-slate-600 border border-slate-200/90 hover:bg-slate-100 hover:text-slate-900 shadow-xs transition cursor-pointer";
         }
       });
     }
@@ -2753,6 +2772,15 @@
       closeSettingsModal();
       checkBackendHealth();
       showStatusBanner("Saved API & Gemini Key configuration! Now click 'Summarize' or '✨ Deep AI Summarize Current Lecture'.", "success");
+    }
+
+    function copyCodeSnippet(btnEl) {
+      const pre = btnEl.closest("div").nextElementSibling;
+      if (!pre) return;
+      navigator.clipboard.writeText(pre.innerText || pre.textContent || "");
+      const orig = btnEl.textContent;
+      btnEl.textContent = "✓ Copied!";
+      setTimeout(() => { btnEl.textContent = orig; }, 1600);
     }
 
     function escapeHtml(str) {

@@ -854,76 +854,16 @@ _VIDEO_SUMMARY_CACHE: Dict[str, Dict[str, Any]] = {}
 
 async def discover_available_gemini_models(client: httpx.AsyncClient, api_key: str) -> List[str]:
     """
-    Dynamically discovers the exact Gemini Flash & Flash-Lite models enabled on the user's Google AI Studio key.
-    Prioritizes high-quota free-tier models (`gemini-2.5-flash-lite`, `gemini-flash-lite-latest`,
-    `gemini-2.5-flash`, `gemini-flash-latest`, `gemini-2.0-flash-lite`, `gemini-2.0-flash`)
-    and eliminates HTTP 404 errors from non-existent model IDs.
+    Zero-latency active Gemini model selector (No deprecated 1.5, 2.0, or 2.5 model calls,
+    and no extra ListModels HTTP roundtrip!).
+    Directly uses Google AI Studio active free-tier aliases:
+      1. `gemini-flash-lite-latest` (Fastest response time, highest free-tier quota)
+      2. `gemini-flash-latest` (Automatic fallback if Flash-Lite is momentarily busy)
     """
-    cache_key = api_key[-8:]
-    if cache_key in _CACHED_GEMINI_MODELS:
-        return _CACHED_GEMINI_MODELS[cache_key]
-
-    preferred_order = [
-        "gemini-2.5-flash-lite",
+    return [
         "gemini-flash-lite-latest",
-        "gemini-2.5-flash",
         "gemini-flash-latest",
-        "gemini-2.0-flash-lite",
-        "gemini-2.0-flash",
     ]
-
-    try:
-        resp = await client.get(
-            "https://generativelanguage.googleapis.com/v1beta/models",
-            params={"key": api_key, "pageSize": 100},
-            timeout=3.0,
-        )
-        if resp.status_code == 200:
-            models_data = resp.json().get("models", [])
-            valid_names = []
-            for m in models_data:
-                methods = m.get("supportedGenerationMethods", [])
-                name = str(m.get("name", "")).replace("models/", "")
-                if "generateContent" not in methods:
-                    continue
-                low = name.lower()
-                # Skip non-text, retired 1.5, experimental thinking, or zero-free-quota pro models
-                if any(
-                    skip in low
-                    for skip in [
-                        "tts",
-                        "imagen",
-                        "embedding",
-                        "aqa",
-                        "vision",
-                        "audio",
-                        "robotics",
-                        "computer-use",
-                        "thinking",
-                        "1.5",
-                        "-pro",
-                        "gemma",
-                        "learnlm",
-                    ]
-                ):
-                    continue
-                if low.startswith("gemini-"):
-                    valid_names.append(name)
-
-            if valid_names:
-                ranked = [p for p in preferred_order if p in valid_names]
-                for v in valid_names:
-                    if v not in ranked and ("lite" in v.lower() or "flash" in v.lower()):
-                        ranked.append(v)
-                if ranked:
-                    print(f"[Gemini Free-Tier Pool] Discovered verified models: {ranked[:6]}")
-                    _CACHED_GEMINI_MODELS[cache_key] = ranked[:6]
-                    return ranked[:6]
-    except Exception as exc:
-        print(f"[Gemini ListModels] Fast fallback to verified default pool: {exc}")
-
-    _CACHED_GEMINI_MODELS[cache_key] = preferred_order
-    return preferred_order
 
 
 def _parse_or_repair_json(raw_text: str) -> Optional[Dict[str, Any]]:
@@ -960,12 +900,11 @@ async def call_llm_json(
     youtube_url_for_native_ingest: Optional[str] = None,
 ) -> Tuple[Optional[Dict[str, Any]], str]:
     """
-    Bulletproof Free-Tier Multi-Model LLM Engine with Automatic 503/429 Backoff Retry:
-    1. Tries Groq (`gsk_...` -> `llama-3.3-70b-versatile`, `llama-3.1-8b-instant`) if configured.
-    2. For Google AI Studio (`AIza...`), queries verified models (`gemini-2.5-flash-lite`,
-       `gemini-flash-lite-latest`, `gemini-2.5-flash`, `gemini-flash-latest`, `gemini-2.0-flash-lite`, `gemini-2.0-flash`).
-    3. If Google returns HTTP 503 (Model Overloaded) or HTTP 429 (Burst Rate Limit), automatically
-       waits 1.2s and retries with the next Flash/Flash-Lite model so Lecture #2..#44 never fail!
+    Fast, Zero-Deprecated-Model LLM Engine:
+    1. Tries Groq (`gsk_...` -> `llama-3.3-70b-versatile`, `llama-3.1-8b-instant`) if configured (~1.4s response).
+    2. For Google AI Studio (`AIza...`), calls `gemini-flash-lite-latest` FIRST and `gemini-flash-latest` SECOND
+       with zero deprecated 1.5/2.0/2.5 model calls and zero ListModels overhead!
+    3. Includes automatic 0.8s retry if a model returns transient HTTP 503 (overloaded) or HTTP 429.
     """
     candidate_sources = [
         os.getenv("GROQ_API_KEY") or "",
@@ -991,7 +930,7 @@ async def call_llm_json(
         return None, "No API key configured (Add GROQ_API_KEY or GEMINI_API_KEY in Vercel Environment Variables)"
 
     is_vercel_env = bool(os.getenv("VERCEL") or os.getenv("VERCEL_ENV"))
-    req_timeout = 20.0 if is_vercel_env else 55.0
+    req_timeout = 20.0 if is_vercel_env else 50.0
     errors_seen: List[str] = []
 
     async with httpx.AsyncClient(timeout=req_timeout) as client:
@@ -1049,32 +988,31 @@ async def call_llm_json(
                                 return parsed, f"AI Deep Study Guide ({m})"
                             errors_seen.append(f"{m}: JSON parse failed")
                         else:
-                            err_msg = resp.json().get("error", {}).get("message", resp.text[:100])
                             errors_seen.append(f"{m} HTTP {resp.status_code}")
                     except Exception as exc:
                         errors_seen.append(f"{m}: {str(exc)[:60]}")
             else:
-                discovered = await discover_available_gemini_models(client, current_key)
-                base_models = [model] + [m for m in discovered if m != model] if model else discovered
-                # Up to 2 passes: if Pass 1 hits transient HTTP 503 / 429 on Google servers, sleep 1.1s and retry!
+                # Only use active, non-deprecated Gemini aliases so the first call succeeds immediately!
+                active_models = ["gemini-flash-lite-latest", "gemini-flash-latest"]
+                if model and model not in active_models and not any(dep in model for dep in ("1.5", "2.0", "2.5")):
+                    active_models.insert(0, model)
+
                 for pass_idx in range(2):
-                    models_for_pass = base_models if pass_idx == 0 else base_models[:3]
                     if pass_idx == 1:
-                        await asyncio.sleep(1.1)
-                    for m in models_for_pass:
+                        await asyncio.sleep(0.8)
+                    for m in active_models:
                         try:
                             url = f"https://generativelanguage.googleapis.com/v1beta/models/{m}:generateContent"
-                            gen_cfg: Dict[str, Any] = {
-                                "temperature": 0.2,
-                                "maxOutputTokens": 8192,
-                                "responseMimeType": "application/json",
-                            }
                             resp = await client.post(
                                 url,
                                 params={"key": current_key},
                                 json={
                                     "contents": [{"parts": [{"text": prompt}]}],
-                                    "generationConfig": gen_cfg,
+                                    "generationConfig": {
+                                        "temperature": 0.2,
+                                        "maxOutputTokens": 8192,
+                                        "responseMimeType": "application/json",
+                                    },
                                 },
                             )
                             if resp.status_code == 200:
@@ -1085,16 +1023,12 @@ async def call_llm_json(
                                     text = "".join(non_thought_parts) or "".join(p.get("text", "") for p in parts)
                                     parsed = _parse_or_repair_json(text)
                                     if parsed:
-                                        print(f"[LLM] Google AI ({m}) generated study JSON successfully!")
+                                        print(f"[LLM] Google AI ({m}) generated study JSON on pass {pass_idx + 1}!")
                                         return parsed, f"AI Deep Study Guide ({m})"
                                     errors_seen.append(f"{m}: JSON truncated")
                             elif resp.status_code in (503, 429):
                                 errors_seen.append(f"{m} HTTP {resp.status_code}")
-                                print(f"[LLM Busy] {m} returned HTTP {resp.status_code}, rotating to next model...")
-                                await asyncio.sleep(0.4)
-                                continue
-                            elif resp.status_code == 404:
-                                # Do not pollute errors_seen with 404s if a regional alias is unavailable; just try next
+                                await asyncio.sleep(0.3)
                                 continue
                             else:
                                 errors_seen.append(f"{m} HTTP {resp.status_code}")
@@ -1103,7 +1037,7 @@ async def call_llm_json(
                             errors_seen.append(f"{m}: {str(exc)[:60]}")
                             continue
 
-    summary_err = " | ".join(errors_seen[-3:]) if errors_seen else "All free-tier models busy—click '✨ Deep AI Summarize' to retry"
+    summary_err = " | ".join(errors_seen[-2:]) if errors_seen else "All free-tier models busy—click '✨ Deep AI Summarize' to retry"
     return None, summary_err
 
 
@@ -1267,14 +1201,19 @@ async def summarize_single_video(
         print(f"[Cache Hit] Returning cached AI study guide for {video.get('video_id')} (0 quota used!)")
         return _VIDEO_SUMMARY_CACHE[cache_id]
     is_vercel = bool(os.getenv("VERCEL") or os.getenv("VERCEL_ENV"))
-    tr_timeout = 1.6 if is_vercel else 4.0
-    try:
-        transcript_items, lang_label = await asyncio.wait_for(
-            fetch_video_transcript(video["video_id"]),
-            timeout=tr_timeout,
-        )
-    except Exception:
+    has_proxy = bool(clean_api_key(os.getenv("YOUTUBE_PROXY_URL") or os.getenv("PROXY_URL")))
+    if is_vercel and not has_proxy:
+        # Skip blocked YouTube scraping on Vercel cloud IPs to save ~1.6s per lecture!
         transcript_items, lang_label = [], "AI Deep Syllabus & Topic Synthesis (Fast Cloud Mode)"
+    else:
+        tr_timeout = 1.5 if is_vercel else 3.5
+        try:
+            transcript_items, lang_label = await asyncio.wait_for(
+                fetch_video_transcript(video["video_id"]),
+                timeout=tr_timeout,
+            )
+        except Exception:
+            transcript_items, lang_label = [], "AI Deep Syllabus & Topic Synthesis (Fast Cloud Mode)"
     chapter_buckets = group_transcript_into_chapters(
         transcript_items=transcript_items,
         video_title=video.get("title", "Untitled Video"),
