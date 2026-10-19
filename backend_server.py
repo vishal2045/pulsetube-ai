@@ -846,11 +846,10 @@ async def discover_available_gemini_models(client: httpx.AsyncClient, api_key: s
         return _CACHED_GEMINI_MODELS[cache_key]
 
     preferred_order = [
-        "gemini-2.5-flash-lite",
-        "gemini-3.8-flash-lite",
         "gemini-flash-lite-latest",
-        "gemma-3-12b-it",
+        "gemini-3.8-flash-lite",
         "gemma-3-27b-it",
+        "gemma-3-12b-it",
         "gemini-3.8-flash",
         "gemini-flash-latest",
     ]
@@ -962,6 +961,8 @@ async def call_llm_json(
     # 4. OPENAI_API_KEY / OPENROUTER_API_KEY from Vercel env
     candidate_sources = [
         os.getenv("GROQ_API_KEY") or "",
+        os.getenv("NEXT_PUBLIC_GROQ_API_KEY") or "",
+        os.getenv("GROQ_KEY") or "",
         api_key or "",
         os.getenv("GEMINI_API_KEY") or "",
         os.getenv("NEXT_PUBLIC_GEMINI_API_KEY") or "",
@@ -983,7 +984,7 @@ async def call_llm_json(
         return None, "No API key configured (Add GROQ_API_KEY or GEMINI_API_KEY in Vercel Environment Variables)"
 
     is_vercel_env = bool(os.getenv("VERCEL") or os.getenv("VERCEL_ENV"))
-    req_timeout = 6.2 if is_vercel_env else 60.0
+    req_timeout = 22.0 if is_vercel_env else 60.0
     errors_seen: List[str] = []
     async with httpx.AsyncClient(timeout=req_timeout) as client:
         for current_key in key_list:
@@ -1030,7 +1031,7 @@ async def call_llm_json(
                                     {"role": "user", "content": prompt},
                                 ],
                                 "temperature": 0.2,
-                                "max_tokens": 3200 if is_vercel_env else 6000,
+                                "max_tokens": 6000,
                             },
                         )
                         if resp.status_code == 200:
@@ -1056,7 +1057,7 @@ async def call_llm_json(
                         url = f"https://generativelanguage.googleapis.com/v1beta/models/{m}:generateContent"
                         gen_cfg: Dict[str, Any] = {
                             "temperature": 0.2,
-                            "maxOutputTokens": 4096 if is_vercel_env else (8192 if is_gemma else 16384),
+                            "maxOutputTokens": 8192 if is_gemma else 8192,
                         }
                         # Gemma models on v1beta do not accept responseMimeType="application/json"
                         if not is_gemma:
@@ -1182,6 +1183,7 @@ def build_extractive_study_summary(
 
     return {
         "is_ai_generated": False,
+        "needs_deep_summary": True,
         "llm_status": llm_status_note or "No Gemini API Key Set",
         "executive_summary": exec_summary,
         "key_takeaways": distinct_takeaways[:8],
@@ -1325,14 +1327,14 @@ MANDATORY TEACHING RULES (READ CAREFULLY):
    - Forbidden: "In this video we will understand X" or "Explains X at 15:40" or "Covers Bean Scopes".
    - Required: Directly TEACH the actual concepts! Explain WHAT each concept is, WHY the problem occurs under the hood, HOW the internal mechanism works step-by-step, and HOW to write the code or formula.
 2. COMPREHENSIVE VIDEO SUMMARY (`executive_summary` & `key_takeaways`):
-   - `executive_summary`: Write a rich, comprehensive 8–12 sentence technical synthesis that walks through ALL major concepts taught in the video from start to finish (explaining the actual theory, why issues like errors/exceptions happen, how annotations/algorithms solve them, and key design principles).
-   - `key_takeaways`: 6–8 high-density, concrete technical takeaways (each teaching a real rule, behavior, or trade-off).
+   - `executive_summary`: Write a rich, clear 5–7 sentence technical synthesis that walks through the major concepts taught in the video from start to finish (explaining the actual theory, internal mechanism, and key design principles).
+   - `key_takeaways`: 5–6 high-density, concrete technical takeaways (each teaching a real rule, behavior, or trade-off).
 3. DEEP CONCEPT CARDS WITH REAL CODE EXAMPLES (`lecture_notes.core_concepts_taught`):
-   - For EVERY major topic/chapter in the video (5–8 concepts), provide:
+   - For the 4–5 most important concepts in the video, provide:
      - `concept`: Clear title of the concept.
-     - `explanation`: 4–6 sentences teaching the exact concept and under-the-hood mechanism in plain, crystal-clear English.
-     - `code_example`: A clean, realistic 6–15 line code snippet (e.g. Java/Spring, Python, C++, SQL, or mathematical derivation) illustrating the concept in action!
-     - `key_points`: 3 crisp bullet points covering edge cases, rules, or interview gotchas.
+     - `explanation`: 3–4 clear sentences teaching the exact concept and under-the-hood mechanism in plain English.
+     - `code_example`: A clean, realistic 6–12 line code snippet (e.g. Java, Python, C++, SQL, or mathematical derivation) illustrating the concept in action!
+     - `key_points`: 2–3 crisp bullet points covering edge cases, rules, or interview gotchas.
 4. SHORT, TO-THE-POINT TIMESTAMP SUMMARIES (`chapters`):
    - For each timestamp in `chapters`, keep `summary` and `what_is_taught` SHORT and TO THE POINT (1–2 crisp sentences, max 35 words) teaching the core point of that specific timestamp, plus 2 short bullet `takeaways`.
 5. DISTINCT, HIGH-YIELD EXAM & INTERVIEW Q&As:
@@ -1480,20 +1482,13 @@ Return ONLY valid JSON matching this exact schema:
   }}
 }}"""
 
-    try:
-        llm_coro = call_llm_json(
-            prompt,
-            provider=provider,
-            api_key=llm_api_key,
-            model=llm_model,
-            youtube_url_for_native_ingest=None,
-        )
-        if is_vercel:
-            llm_res, llm_status = await asyncio.wait_for(llm_coro, timeout=max(2.0, max_Execution_budget))
-        else:
-            llm_res, llm_status = await llm_coro
-    except asyncio.TimeoutError:
-        llm_res, llm_status = None, "Timed out on Vercel 10s limit (Click '✨ Deep AI Summarize' to retry)" 
+    llm_res, llm_status = await call_llm_json(
+        prompt,
+        provider=provider,
+        api_key=llm_api_key,
+        model=llm_model,
+        youtube_url_for_native_ingest=None,
+    )
 
     if not llm_res or not isinstance(llm_res, dict) or not llm_res.get("executive_summary"):
         summary_final = build_extractive_study_summary(
@@ -1882,15 +1877,8 @@ async def analyze_youtube_url(req: AnalyzeRequest):
         duration_stats = calculate_playlist_durations(durations)
 
         if videos:
-            first_video_task = summarize_single_video(
-                video=videos[0],
-                provider=req.llm_provider,
-                llm_api_key=llm_key or None,
-                llm_model=req.llm_model,
-                summary_depth=req.summary_depth,
-                study_goal=req.study_goal,
-            )
-            rollup_task = generate_playlist_rollup(
+            is_vercel_pl = bool(os.getenv("VERCEL") or os.getenv("VERCEL_ENV"))
+            rollup = await generate_playlist_rollup(
                 playlist_meta=pl_meta,
                 all_videos=videos,
                 duration_stats=duration_stats,
@@ -1898,32 +1886,27 @@ async def analyze_youtube_url(req: AnalyzeRequest):
                 llm_api_key=llm_key or None,
                 llm_model=req.llm_model,
             )
-            is_vercel_pl = bool(os.getenv("VERCEL") or os.getenv("VERCEL_ENV"))
-            if is_vercel_pl:
-                elapsed = time.monotonic() - req_start_ts
-                rem_budget = max(2.2, 8.0 - elapsed)
-                try:
-                    first_sv, rollup = await asyncio.wait_for(
-                        asyncio.gather(first_video_task, rollup_task),
-                        timeout=rem_budget,
-                    )
-                except asyncio.TimeoutError:
-                    first_sv = build_lightweight_playlist_item_placeholder(videos[0], 1)
-                    rollup = await generate_playlist_rollup(
-                        playlist_meta=pl_meta,
-                        all_videos=videos,
-                        duration_stats=duration_stats,
-                        provider=req.llm_provider,
-                        llm_api_key=llm_key or None,
-                        llm_model=req.llm_model,
-                    )
+            if is_vercel_pl and len(videos) > 1:
+                # Return all playlist videos in ~1.2s so /api/analyze NEVER times out on Vercel;
+                # the frontend immediately fires /api/summarize-video for Lecture #1 with a full dedicated time budget!
+                summarized_videos = [
+                    build_lightweight_playlist_item_placeholder(v, idx + 1)
+                    for idx, v in enumerate(videos)
+                ]
             else:
-                first_sv, rollup = await asyncio.gather(first_video_task, rollup_task)
-            first_sv["playlist_index"] = 1
-            summarized_videos = [first_sv] + [
-                build_lightweight_playlist_item_placeholder(v, idx + 1)
-                for idx, v in enumerate(videos[1:], start=1)
-            ]
+                first_sv = await summarize_single_video(
+                    video=videos[0],
+                    provider=req.llm_provider,
+                    llm_api_key=llm_key or None,
+                    llm_model=req.llm_model,
+                    summary_depth=req.summary_depth,
+                    study_goal=req.study_goal,
+                )
+                first_sv["playlist_index"] = 1
+                summarized_videos = [first_sv] + [
+                    build_lightweight_playlist_item_placeholder(v, idx + 1)
+                    for idx, v in enumerate(videos[1:], start=1)
+                ]
         else:
             summarized_videos = []
             rollup = {}

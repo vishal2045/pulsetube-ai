@@ -1777,22 +1777,29 @@
         }
 
         const payload = await resp.json();
+        backendOnline = true;
         renderAnalyzedPayload(payload);
 
         const totalVids = payload.kind === "playlist" ? payload.videos.length : 1;
-        if (payload.used_ai_model === false) {
+        if (payload.kind === "playlist" && totalVids > 0 && payload.videos[0].summary?.needs_deep_summary) {
           showStatusBanner(
-            `Loaded ${totalVids} video(s) with extractive transcript notes. Status: ${payload.llm_status || 'No Gemini/OpenAI Key set'}. Click 'API & Gemini Key Config' (top right) and paste your Gemini API key for full AI exam derivations & interview Q&As!`,
+            `Loaded all ${totalVids} videos in the playlist (${payload.duration_stats.total_formatted})! Now generating deep AI study notes, code examples & Q&As for Lecture #1...`,
+            "info"
+          );
+          await summarizeSpecificVideoOnDemand(0, true);
+        } else if (payload.used_ai_model === false) {
+          showStatusBanner(
+            `Loaded ${totalVids} video(s) with extractive transcript notes. Status: ${payload.llm_status || 'No Gemini/Groq Key set'}. Click '✨ Deep AI Summarize Current Lecture' to retry!`,
             "warn"
           );
         } else if (payload.kind === "playlist" && totalVids > 1) {
           showStatusBanner(
-            `Loaded all ${totalVids} videos in the playlist (${payload.duration_stats.total_formatted}), generated Master Course Rollup, and deeply summarized Lecture #1! Click any Lecture (#2–#${totalVids}) to auto-summarize its full transcript on demand.`,
+            `Loaded all ${totalVids} videos in the playlist (${payload.duration_stats.total_formatted}), generated Master Course Rollup, and deeply summarized Lecture #1! Click any Lecture (#2–#${totalVids}) to auto-summarize on demand.`,
             "success"
           );
         } else {
           showStatusBanner(
-            `Successfully extracted transcript and generated Deep Study Notes, Formulas, Exam Q&As, and Interview Flashcards (${payload.llm_status || 'AI'})!`,
+            `Successfully generated Deep Study Notes, Code Examples, Formulas, Exam Q&As, and Interview Flashcards (${payload.llm_status || 'AI'})!`,
             "success"
           );
         }
@@ -1940,7 +1947,7 @@
       renderGlobalLectureSwitcher(videos);
       renderRollupSection(data, videos);
       renderVideoSelectorList(videos);
-      selectVideoForInspection(0, true);
+      selectVideoForInspection(0, false);
 
       document.getElementById("calcStartIdx").max = videos.length;
       document.getElementById("calcStartIdx").value = 1;
@@ -1997,7 +2004,7 @@
       renderChapterCards(vid, "");
 
       // If this video in a playlist hasn't been deeply summarized yet, auto-trigger `/api/summarize-video`!
-      if (autoTriggerSummarize && vid.summary?.needs_deep_summary && backendOnline) {
+      if (autoTriggerSummarize && vid.summary?.needs_deep_summary) {
         summarizeSpecificVideoOnDemand(activeVideoIndex, true);
       }
     }
