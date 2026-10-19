@@ -630,7 +630,9 @@
           <div>
             <label class="block font-semibold text-slate-300 mb-1">LLM Provider</label>
             <select id="cfgLlmProvider" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white">
-              <option value="gemini" selected>Google Gemini API</option>
+              <option value="gemini" selected>Google AI Free Pool (Gemini + Gemma 3)</option>
+              <option value="groq">Groq Free Cloud (Llama 3.3 70B)</option>
+              <option value="openrouter">OpenRouter Free Models</option>
               <option value="openai">OpenAI API</option>
             </select>
           </div>
@@ -1938,7 +1940,7 @@
       renderGlobalLectureSwitcher(videos);
       renderRollupSection(data, videos);
       renderVideoSelectorList(videos);
-      selectVideoForInspection(0, false);
+      selectVideoForInspection(0, true);
 
       document.getElementById("calcStartIdx").max = videos.length;
       document.getElementById("calcStartIdx").value = 1;

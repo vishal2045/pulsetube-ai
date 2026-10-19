@@ -29,6 +29,7 @@ import math
 import os
 import pathlib
 import re
+import time
 import xml.etree.ElementTree as ET
 from typing import Any, Dict, List, Optional, Tuple
 from urllib.parse import parse_qs, urlparse
@@ -57,7 +58,7 @@ load_dotenv(pathlib.Path(__file__).resolve().parent / ".env")
 
 app = FastAPI(
     title="PulseTube AI v4.0 — Deep Concept, Code, Exam & Interview Summarizer API",
-    version="4.0.0",
+    version="6.0.0",
     description="Full-stack backend with dynamic Gemini ListModels discovery, Hindi/English caption extraction, and code-grounded lecture teaching.",
 )
 
@@ -845,14 +846,17 @@ async def discover_available_gemini_models(client: httpx.AsyncClient, api_key: s
         return _CACHED_GEMINI_MODELS[cache_key]
 
     preferred_order = [
-        "gemini-3.8-flash",
+        "gemini-2.5-flash-lite",
         "gemini-3.8-flash-lite",
         "gemini-flash-lite-latest",
-        "gemini-flash-latest",
-        "gemma-3-27b-it",
         "gemma-3-12b-it",
-        "gemma-3-4b-it",
+        "gemma-3-27b-it",
+        "gemini-3.8-flash",
+        "gemini-flash-latest",
     ]
+    if os.getenv("VERCEL") or os.getenv("VERCEL_ENV"):
+        _CACHED_GEMINI_MODELS[cache_key] = preferred_order
+        return preferred_order
 
     try:
         resp = await client.get(
@@ -951,19 +955,37 @@ async def call_llm_json(
        `gemini-3.8-flash` -> `gemini-3.8-flash-lite` / `gemini-flash-lite-latest` -> `gemma-3-27b-it` / `gemma-3-12b-it`
        (Gemma 3 models on the same Gemini API key have 14,400 free requests/day!).
     """
-    raw_keys_str = (
-        api_key
-        or os.getenv("GROQ_API_KEY")
-        or os.getenv("GEMINI_API_KEY")
-        or os.getenv("OPENAI_API_KEY")
-        or ""
-    )
-    key_list = [clean_api_key(k) for k in raw_keys_str.split(",") if clean_api_key(k)]
-    if not key_list:
-        return None, "No API key configured (Add a free Gemini or Groq API key in 'API & Gemini Key Config')"
+    # Build priority-ordered key list:
+    # 1. GROQ_API_KEY from Vercel env (fastest: ~1.4s response on Llama 3.3 70B / 3.1 8B, 14,400 free req/day, never hits 504!)
+    # 2. Explicit UI-supplied key (if user typed a key in the settings modal)
+    # 3. GEMINI_API_KEY / GOOGLE_API_KEY from Vercel env
+    # 4. OPENAI_API_KEY / OPENROUTER_API_KEY from Vercel env
+    candidate_sources = [
+        os.getenv("GROQ_API_KEY") or "",
+        api_key or "",
+        os.getenv("GEMINI_API_KEY") or "",
+        os.getenv("NEXT_PUBLIC_GEMINI_API_KEY") or "",
+        os.getenv("GOOGLE_API_KEY") or "",
+        os.getenv("OPENAI_API_KEY") or "",
+    ]
+    key_list: List[str] = []
+    # Put any Groq keys (`gsk_...`) at the very front of `key_list` so Groq is always tried first!
+    for src in candidate_sources:
+        for part in src.split(","):
+            ck = clean_api_key(part)
+            if ck and ck not in key_list:
+                if ck.startswith("gsk_"):
+                    key_list.insert(0, ck)
+                else:
+                    key_list.append(ck)
 
+    if not key_list:
+        return None, "No API key configured (Add GROQ_API_KEY or GEMINI_API_KEY in Vercel Environment Variables)"
+
+    is_vercel_env = bool(os.getenv("VERCEL") or os.getenv("VERCEL_ENV"))
+    req_timeout = 6.2 if is_vercel_env else 60.0
     errors_seen: List[str] = []
-    async with httpx.AsyncClient(timeout=75.0) as client:
+    async with httpx.AsyncClient(timeout=req_timeout) as client:
         for current_key in key_list:
             # Auto-detect provider from key prefix so user doesn't even have to switch dropdown!
             eff_provider = provider.lower()
@@ -1008,7 +1030,7 @@ async def call_llm_json(
                                     {"role": "user", "content": prompt},
                                 ],
                                 "temperature": 0.2,
-                                "max_tokens": 6000,
+                                "max_tokens": 3200 if is_vercel_env else 6000,
                             },
                         )
                         if resp.status_code == 200:
@@ -1034,7 +1056,7 @@ async def call_llm_json(
                         url = f"https://generativelanguage.googleapis.com/v1beta/models/{m}:generateContent"
                         gen_cfg: Dict[str, Any] = {
                             "temperature": 0.2,
-                            "maxOutputTokens": 8192 if is_gemma else 16384,
+                            "maxOutputTokens": 4096 if is_vercel_env else (8192 if is_gemma else 16384),
                         }
                         # Gemma models on v1beta do not accept responseMimeType="application/json"
                         if not is_gemma:
@@ -1245,20 +1267,26 @@ async def summarize_single_video(
     llm_model: Optional[str],
     summary_depth: str = "comprehensive",
     study_goal: str = "master",
+    max_Execution_budget: float = 7.2,
 ) -> Dict[str, Any]:
     cache_id = f"{video.get('video_id')}_{study_goal}"
     if cache_id in _VIDEO_SUMMARY_CACHE:
         print(f"[Cache Hit] Returning cached AI study guide for {video.get('video_id')} (0 quota used!)")
         return _VIDEO_SUMMARY_CACHE[cache_id]
     is_vercel = bool(os.getenv("VERCEL") or os.getenv("VERCEL_ENV"))
-    tr_timeout = 1.8 if is_vercel else 4.0
-    try:
-        transcript_items, lang_label = await asyncio.wait_for(
-            fetch_video_transcript(video["video_id"]),
-            timeout=tr_timeout,
-        )
-    except Exception:
-        transcript_items, lang_label = [], "AI Deep Syllabus & Topic Synthesis (Fast Cloud Mode)" 
+    has_proxy = bool(clean_api_key(os.getenv("YOUTUBE_PROXY_URL") or os.getenv("PROXY_URL")))
+    if is_vercel and not has_proxy:
+        # On Vercel AWS IPs without a proxy, skip blocked YouTube page scraping (saves 1.8s so LLM never hits 504!)
+        transcript_items, lang_label = [], "AI Deep Syllabus & Topic Synthesis (Vercel Fast Mode)"
+    else:
+        tr_timeout = 2.0 if is_vercel else 4.0
+        try:
+            transcript_items, lang_label = await asyncio.wait_for(
+                fetch_video_transcript(video["video_id"]),
+                timeout=tr_timeout,
+            )
+        except Exception:
+            transcript_items, lang_label = [], "AI Deep Syllabus & Topic Synthesis (Fast Cloud Mode)"
     chapter_buckets = group_transcript_into_chapters(
         transcript_items=transcript_items,
         video_title=video.get("title", "Untitled Video"),
@@ -1452,13 +1480,20 @@ Return ONLY valid JSON matching this exact schema:
   }}
 }}"""
 
-    llm_res, llm_status = await call_llm_json(
-        prompt,
-        provider=provider,
-        api_key=llm_api_key,
-        model=llm_model,
-        youtube_url_for_native_ingest=(video.get("url") if (not is_vercel and not transcript_items and video.get("duration_seconds", 0) <= 600) else None),
-    )
+    try:
+        llm_coro = call_llm_json(
+            prompt,
+            provider=provider,
+            api_key=llm_api_key,
+            model=llm_model,
+            youtube_url_for_native_ingest=None,
+        )
+        if is_vercel:
+            llm_res, llm_status = await asyncio.wait_for(llm_coro, timeout=max(2.0, max_Execution_budget))
+        else:
+            llm_res, llm_status = await llm_coro
+    except asyncio.TimeoutError:
+        llm_res, llm_status = None, "Timed out on Vercel 10s limit (Click '✨ Deep AI Summarize' to retry)" 
 
     if not llm_res or not isinstance(llm_res, dict) or not llm_res.get("executive_summary"):
         summary_final = build_extractive_study_summary(
@@ -1770,10 +1805,11 @@ async def serve_frontend():
 async def health_check():
     return {
         "status": "ok",
-        "version": "4.0.0",
+        "version": "6.0.0",
         "service": "PulseTube AI v4.0 (Dynamic Gemini ListModels + Code & Concept Teaching Engine)",
         "has_youtube_transcript_api": HAS_TRANSCRIPT_API,
         "has_env_youtube_key": bool(clean_api_key(os.getenv("YOUTUBE_API_KEY"))),
+        "has_env_groq_key": bool(clean_api_key(os.getenv("GROQ_API_KEY"))),
         "has_env_gemini_key": bool(clean_api_key(os.getenv("GEMINI_API_KEY"))),
         "has_env_openai_key": bool(clean_api_key(os.getenv("OPENAI_API_KEY"))),
     }
@@ -1792,6 +1828,7 @@ async def api_calculate_duration(req: DurationCalcRequest):
 async def api_summarize_single_video_on_demand(req: SummarizeSingleVideoRequest):
     llm_key = clean_api_key(
         req.llm_api_key
+        or os.getenv("GROQ_API_KEY")
         or (os.getenv("OPENAI_API_KEY") if req.llm_provider == "openai" else os.getenv("GEMINI_API_KEY"))
         or os.getenv("NEXT_PUBLIC_GEMINI_API_KEY")
         or os.getenv("GOOGLE_API_KEY")
@@ -1815,10 +1852,12 @@ async def api_summarize_single_video_on_demand(req: SummarizeSingleVideoRequest)
 
 @app.post("/api/analyze")
 async def analyze_youtube_url(req: AnalyzeRequest):
+    req_start_ts = time.monotonic()
     parsed = parse_youtube_url(req.url)
     yt_key = clean_api_key(req.youtube_api_key or os.getenv("YOUTUBE_API_KEY") or os.getenv("NEXT_PUBLIC_YOUTUBE_API_KEY") or os.getenv("GOOGLE_API_KEY"))
     llm_key = clean_api_key(
         req.llm_api_key
+        or os.getenv("GROQ_API_KEY")
         or (os.getenv("OPENAI_API_KEY") if req.llm_provider == "openai" else os.getenv("GEMINI_API_KEY"))
         or os.getenv("NEXT_PUBLIC_GEMINI_API_KEY")
         or os.getenv("GOOGLE_API_KEY")
@@ -1859,7 +1898,27 @@ async def analyze_youtube_url(req: AnalyzeRequest):
                 llm_api_key=llm_key or None,
                 llm_model=req.llm_model,
             )
-            first_sv, rollup = await asyncio.gather(first_video_task, rollup_task)
+            is_vercel_pl = bool(os.getenv("VERCEL") or os.getenv("VERCEL_ENV"))
+            if is_vercel_pl:
+                elapsed = time.monotonic() - req_start_ts
+                rem_budget = max(2.2, 8.0 - elapsed)
+                try:
+                    first_sv, rollup = await asyncio.wait_for(
+                        asyncio.gather(first_video_task, rollup_task),
+                        timeout=rem_budget,
+                    )
+                except asyncio.TimeoutError:
+                    first_sv = build_lightweight_playlist_item_placeholder(videos[0], 1)
+                    rollup = await generate_playlist_rollup(
+                        playlist_meta=pl_meta,
+                        all_videos=videos,
+                        duration_stats=duration_stats,
+                        provider=req.llm_provider,
+                        llm_api_key=llm_key or None,
+                        llm_model=req.llm_model,
+                    )
+            else:
+                first_sv, rollup = await asyncio.gather(first_video_task, rollup_task)
             first_sv["playlist_index"] = 1
             summarized_videos = [first_sv] + [
                 build_lightweight_playlist_item_placeholder(v, idx + 1)
@@ -1887,6 +1946,7 @@ async def analyze_youtube_url(req: AnalyzeRequest):
         videos = await fetch_youtube_video_metadata([parsed["video_id"]], yt_key)
         if not videos:
             raise HTTPException(status_code=404, detail=f"Video '{parsed['video_id']}' not found.")
+        elapsed = time.monotonic() - req_start_ts
         sv = await summarize_single_video(
             video=videos[0],
             provider=req.llm_provider,
@@ -1894,6 +1954,7 @@ async def analyze_youtube_url(req: AnalyzeRequest):
             llm_model=req.llm_model,
             summary_depth=req.summary_depth,
             study_goal=req.study_goal,
+            max_Execution_budget=max(2.5, 8.2 - elapsed),
         )
         duration_stats = calculate_playlist_durations([sv["duration_seconds"]])
         return {
