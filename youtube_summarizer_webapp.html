@@ -1902,8 +1902,10 @@
         const resData = await resp.json();
         const updatedVideo = resData.video;
         updatedVideo.playlist_index = idx + 1;
-        updatedVideo.summary.needs_deep_summary = false;
-        setCachedVideoSummary(updatedVideo.video_id, studyGoal, updatedVideo);
+        updatedVideo.summary.needs_deep_summary = !resData.used_ai_model;
+        if (resData.used_ai_model) {
+          setCachedVideoSummary(updatedVideo.video_id, studyGoal, updatedVideo);
+        }
 
         if (currentData.kind === "playlist") {
           currentData.videos[idx] = updatedVideo;
