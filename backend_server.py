@@ -620,9 +620,8 @@ def group_transcript_into_chapters(
     target_chapters: int = 7,
 ) -> List[Dict[str, Any]]:
     native_chapters = parse_description_chapters(description, total_duration)
-    if len(native_chapters) > 12:
-        step_idx = max(1, len(native_chapters) // 10)
-        sampled = [native_chapters[i] for i in range(0, len(native_chapters), step_idx)][:12]
+    if len(native_chapters) > 18:
+        sampled = native_chapters[:18]
         for i in range(len(sampled)):
             sampled[i]["end_seconds"] = (
                 sampled[i + 1]["start_seconds"] if i + 1 < len(sampled) else max(total_duration, sampled[i]["start_seconds"] + 300)
@@ -846,11 +845,11 @@ async def discover_available_gemini_models(client: httpx.AsyncClient, api_key: s
         return _CACHED_GEMINI_MODELS[cache_key]
 
     preferred_order = [
+        "gemini-3.8-flash",
         "gemini-flash-lite-latest",
         "gemini-3.8-flash-lite",
         "gemma-3-27b-it",
         "gemma-3-12b-it",
-        "gemini-3.8-flash",
         "gemini-flash-latest",
     ]
     if os.getenv("VERCEL") or os.getenv("VERCEL_ENV"):
@@ -1031,7 +1030,7 @@ async def call_llm_json(
                                     {"role": "user", "content": prompt},
                                 ],
                                 "temperature": 0.2,
-                                "max_tokens": 6000,
+                                "max_tokens": 7500,
                             },
                         )
                         if resp.status_code == 200:
@@ -1057,7 +1056,7 @@ async def call_llm_json(
                         url = f"https://generativelanguage.googleapis.com/v1beta/models/{m}:generateContent"
                         gen_cfg: Dict[str, Any] = {
                             "temperature": 0.2,
-                            "maxOutputTokens": 8192 if is_gemma else 8192,
+                            "maxOutputTokens": 8192 if is_gemma else 12288,
                         }
                         # Gemma models on v1beta do not accept responseMimeType="application/json"
                         if not is_gemma:
@@ -1226,7 +1225,7 @@ def build_lightweight_playlist_item_placeholder(video: Dict[str, Any], index_1ba
             "what_is_taught": f"Covers {ch['title']}.",
             "takeaways": [],
         }
-        for i, ch in enumerate(native_chapters[:12])
+        for i, ch in enumerate(native_chapters[:18])
     ]
 
     return {
@@ -1276,19 +1275,14 @@ async def summarize_single_video(
         print(f"[Cache Hit] Returning cached AI study guide for {video.get('video_id')} (0 quota used!)")
         return _VIDEO_SUMMARY_CACHE[cache_id]
     is_vercel = bool(os.getenv("VERCEL") or os.getenv("VERCEL_ENV"))
-    has_proxy = bool(clean_api_key(os.getenv("YOUTUBE_PROXY_URL") or os.getenv("PROXY_URL")))
-    if is_vercel and not has_proxy:
-        # On Vercel AWS IPs without a proxy, skip blocked YouTube page scraping (saves 1.8s so LLM never hits 504!)
-        transcript_items, lang_label = [], "AI Deep Syllabus & Topic Synthesis (Vercel Fast Mode)"
-    else:
-        tr_timeout = 2.0 if is_vercel else 4.0
-        try:
-            transcript_items, lang_label = await asyncio.wait_for(
-                fetch_video_transcript(video["video_id"]),
-                timeout=tr_timeout,
-            )
-        except Exception:
-            transcript_items, lang_label = [], "AI Deep Syllabus & Topic Synthesis (Fast Cloud Mode)"
+    tr_timeout = 1.6 if is_vercel else 4.0
+    try:
+        transcript_items, lang_label = await asyncio.wait_for(
+            fetch_video_transcript(video["video_id"]),
+            timeout=tr_timeout,
+        )
+    except Exception:
+        transcript_items, lang_label = [], "AI Deep Syllabus & Topic Synthesis (Fast Cloud Mode)"
     chapter_buckets = group_transcript_into_chapters(
         transcript_items=transcript_items,
         video_title=video.get("title", "Untitled Video"),
@@ -1310,50 +1304,56 @@ async def summarize_single_video(
 
     clean_desc = clean_description_text(video.get("description", ""))[:1800]
 
-    prompt = f"""You are a Master Computer Science & University Professor and Senior Technical Interview Coach.
-A student is reading your study guide instead of watching this entire {video['duration_human']} lecture video so they can understand EVERY concept, mechanism, code example, and interview/exam question fast!
+    prompt = f"""You are a Distinguished Computer Science Professor, Principal Staff Software Engineer, and Technical Author.
+A student or software engineer is studying your master guide instead of watching this {video['duration_human']} lecture video so they can master EVERY concept, architectural diagram/flow, production-grade code implementation, design pattern, and exam/interview question in depth!
 
 Video Title: {video['title']}
 Channel / Instructor: {video['channel_title']}
 Duration: {video['duration_human']}
 Video Description: {clean_desc}
-Spoken Transcript Status: {"Extracted (" + str(len(full_transcript_text.split())) + " words, may be in English, Hindi, or Hinglish—translate and teach in clear English)" if full_transcript_text else "No captions uploaded on YouTube—use the Video Title, Description, and the exact Chapter Timestamps/Topics below to thoroughly teach every concept, code example, and mechanism covered in this lecture!"}
+Spoken Transcript Status: {"Extracted (" + str(len(full_transcript_text.split())) + " words; if Hindi/Hinglish, translate and teach in crystal-clear English)" if full_transcript_text else "No raw captions returned by YouTube—use the Video Title, Description, and the exact Chapter Timestamps/Topics below plus your deep domain expertise on this exact lecture topic to teach every section, code implementation, and design pattern in complete detail!"}
 
 Lecture Chapters & Transcript Segments:
 {json.dumps(segments_payload, ensure_ascii=False)}
 
-MANDATORY TEACHING RULES (READ CAREFULLY):
-1. NEVER WRITE META-FILLER:
-   - Forbidden: "In this video we will understand X" or "Explains X at 15:40" or "Covers Bean Scopes".
-   - Required: Directly TEACH the actual concepts! Explain WHAT each concept is, WHY the problem occurs under the hood, HOW the internal mechanism works step-by-step, and HOW to write the code or formula.
-2. COMPREHENSIVE VIDEO SUMMARY (`executive_summary` & `key_takeaways`):
-   - `executive_summary`: Write a rich, clear 5–7 sentence technical synthesis that walks through the major concepts taught in the video from start to finish (explaining the actual theory, internal mechanism, and key design principles).
-   - `key_takeaways`: 5–6 high-density, concrete technical takeaways (each teaching a real rule, behavior, or trade-off).
-3. DEEP CONCEPT CARDS WITH REAL CODE EXAMPLES (`lecture_notes.core_concepts_taught`):
-   - For the 4–5 most important concepts in the video, provide:
-     - `concept`: Clear title of the concept.
-     - `explanation`: 3–4 clear sentences teaching the exact concept and under-the-hood mechanism in plain English.
-     - `code_example`: A clean, realistic 6–12 line code snippet (e.g. Java, Python, C++, SQL, or mathematical derivation) illustrating the concept in action!
-     - `key_points`: 2–3 crisp bullet points covering edge cases, rules, or interview gotchas.
-4. SHORT, TO-THE-POINT TIMESTAMP SUMMARIES (`chapters`):
-   - For each timestamp in `chapters`, keep `summary` and `what_is_taught` SHORT and TO THE POINT (1–2 crisp sentences, max 35 words) teaching the core point of that specific timestamp, plus 2 short bullet `takeaways`.
-5. DISTINCT, HIGH-YIELD EXAM & INTERVIEW Q&As:
-   - Every question in `exam_questions` and `interview_questions` must test a DIFFERENT concept from the video with a concrete, accurate answer.
+MANDATORY QUALITY & TEACHING RULES (CRITICAL):
+1. ZERO META-FILLER OR PLACEHOLDERS:
+   - Forbidden: "In this video the instructor discusses X", "Covers UML diagrams", or "Check your API key".
+   - Required: Directly TEACH the actual subject matter as an authoritative textbook and interview handbook! Explain WHAT each concept is, WHY naive approaches fail in production, HOW the internal mechanism/architecture works step-by-step, and WHEN to use or avoid it.
+2. TEXTBOOK-GRADE EXECUTIVE SUMMARY (`executive_summary` & `key_takeaways`):
+   - `executive_summary`: Write a rich, cohesive 7–10 sentence technical synthesis that teaches the complete arc of the lecture from first principles to advanced trade-offs, naming concrete classes, interfaces, algorithms, and time/space complexities.
+   - `key_takeaways`: 6–8 high-density, self-contained technical insights (each teaching a concrete engineering rule, formula, or architectural principle).
+3. DEEP CONCEPT CARDS WITH RUNNABLE PRODUCTION CODE (`lecture_notes.core_concepts_taught`):
+   - Generate 5–7 deep concept cards covering all major topics in the video:
+     - `concept`: Precise technical title.
+     - `explanation`: 4–5 detailed sentences teaching the internal mechanism, object lifecycle, memory/thread behavior, or mathematical derivation.
+     - `code_example`: A complete, clean, runnable 10–18 line code implementation (e.g., Java with interfaces/classes/annotations for LLD/OOPS/Spring, Python/C++ for DSA/ML, or SQL) with inline comments showing the exact pattern in action!
+     - `key_points`: 3 concrete bullet points covering edge cases, thread-safety/concurrency, or interview follow-ups.
+4. NEVER LEAVE `formulas_and_algorithms`, `worked_examples`, OR `comparison_table` EMPTY:
+   - `formulas_and_algorithms` (3–4 items): For math/DSA/ML lectures, include exact equations and Big-O complexity; for Software Engineering / LLD / System Design lectures, include Design Pattern structural templates, SOLID/DRY/KISS rules, UML relationship rules (`Is-A` vs `Has-A` Composition/Aggregation), or concurrency invariants!
+   - `worked_examples` (2–3 items): Concrete end-to-end walkthroughs or machine-coding dry runs (e.g., designing a Parking Lot / Tic-Tac-Toe / Strategy Pattern flow or tracing an algorithm step-by-step with sample inputs and outputs).
+   - `comparison_table` (4 rows): High-yield side-by-side engineering comparisons (e.g., Inheritance vs. Composition, Factory vs. Abstract Factory, Strategy vs. State, Constructor vs. Setter Injection, or Batch vs. Stochastic GD) with a clear production verdict.
+5. SEQUENTIAL TIMESTAMP SUMMARIES (`chapters`):
+   - Include all chapters from the input in chronological order. For each chapter, write a crisp 2-sentence explanation teaching the exact point taught at that timestamp, plus 2 specific bullet `takeaways`.
+6. HIGH-YIELD EXAM & INTERVIEW Q&As (`exam_prep` & `interview_prep`):
+   - `exam_questions`: 4 distinct university/machine-coding questions with rigorous, step-by-step `model_answer`s.
+   - `interview_questions`: 4 distinct senior technical interview questions, each with a `elevator_pitch_30s`, `deep_dive_answer` (internal mechanics/code structure), and `follow_up_tradeoffs` (scaling, concurrency, extensibility).
+   - `flashcards`: 6 active-recall flashcards testing definitions, code output, and design trade-offs.
 
 Return ONLY valid JSON matching this exact schema:
 {{
-  "executive_summary": "Comprehensive 8-12 sentence technical synthesis teaching all major concepts, internal mechanisms, and design trade-offs from the lecture.",
+  "executive_summary": "7-10 sentence textbook-grade technical synthesis teaching all major concepts, internal mechanisms, and architectural trade-offs.",
   "key_takeaways": [
-    "Concrete technical takeaway #1",
-    "Concrete technical takeaway #2",
-    "Concrete technical takeaway #3",
-    "Concrete technical takeaway #4",
-    "Concrete technical takeaway #5",
-    "Concrete technical takeaway #6"
+    "Concrete technical rule or insight #1",
+    "Concrete technical rule or insight #2",
+    "Concrete technical rule or insight #3",
+    "Concrete technical rule or insight #4",
+    "Concrete technical rule or insight #5",
+    "Concrete technical rule or insight #6"
   ],
   "action_items": [
-    "Practical coding or problem-solving exercise #1",
-    "Practical coding or problem-solving exercise #2"
+    "Hands-on coding or design exercise #1",
+    "Hands-on coding or design exercise #2"
   ],
   "chapters": [
     {{
@@ -1361,80 +1361,87 @@ Return ONLY valid JSON matching this exact schema:
       "title": "Chapter Topic Title",
       "timestamp": "MM:SS",
       "start_seconds": 0,
-      "summary": "1-2 short, direct sentences explaining the exact concept taught at this timestamp.",
-      "what_is_taught": "1-2 short, direct sentences explaining the exact concept taught at this timestamp.",
+      "summary": "2 crisp sentences directly teaching the concept covered at this timestamp.",
+      "what_is_taught": "2 crisp sentences directly teaching the concept covered at this timestamp.",
       "takeaways": [
-        "Short technical point 1",
-        "Short technical point 2"
+        "Specific technical point 1",
+        "Specific technical point 2"
       ]
     }}
   ],
   "lecture_notes": {{
     "core_concepts_taught": [
       {{
-        "concept": "Concept Name (e.g. Constructor vs Setter Circular Dependency)",
+        "concept": "Concept Name",
         "timestamp": "MM:SS",
         "start_seconds": 0,
-        "explanation": "4-6 sentences explaining what this concept is, how it works internally, and why it matters.",
-        "code_example": "// Clean 6-15 line code snippet or mathematical derivation illustrating this concept",
+        "explanation": "4-5 detailed sentences explaining what this concept is, how it works under the hood, and why it matters in production.",
+        "code_example": "// 10-18 line clean, well-commented code implementation (Java/Python/C++) illustrating this concept",
         "key_points": [
-          "Key rule or internal behavior 1",
-          "Key rule or internal behavior 2",
-          "Key edge case or best practice 3"
+          "Key architectural rule or internal behavior 1",
+          "Key edge case or concurrency/memory consideration 2",
+          "Key interview gotcha or best practice 3"
         ]
       }}
     ],
     "formulas_and_algorithms": [
       {{
-        "name": "Annotation / Algorithm / Formula / Pattern Name",
-        "expression": "Exact syntax, annotation, or complexity O(...)",
-        "when_to_use": "When to use or avoid this in real projects/exams",
+        "name": "Design Pattern / Principle / Algorithm / Formula Name",
+        "expression": "Class/Interface signature, UML relation, complexity O(...), or equation",
+        "when_to_use": "Exact scenario when to apply or avoid this in real systems/interviews",
         "explanation": "2-3 sentences explaining how it works under the hood"
       }}
     ],
     "worked_examples": [
       {{
-        "title": "Concrete Code / Scenario Walkthrough",
+        "title": "End-to-End Machine Coding / Algorithm Dry-Run Walkthrough",
         "timestamp": "MM:SS",
-        "problem": "The concrete problem scenario demonstrated in the lecture",
-        "step_by_step_solution": "Step-by-step trace of what happens at runtime and how to resolve it"
+        "problem": "Concrete engineering problem statement or scenario from the lecture",
+        "step_by_step_solution": "1. Requirement & Entity breakdown -> 2. Class/Interface hierarchy -> 3. Core method execution flow & edge-case handling"
       }}
     ],
     "comparison_table": [
       {{
-        "aspect": "Feature / Comparison Dimension",
-        "approach_a": "Option A (e.g. Singleton / Eager / Constructor Injection)",
-        "approach_b": "Option B (e.g. Prototype / @Lazy / Setter Injection)",
-        "verdict": "Clear rule on when to choose which"
+        "aspect": "Comparison Dimension",
+        "approach_a": "Approach A (with pros/cons)",
+        "approach_b": "Approach B (with pros/cons)",
+        "verdict": "Actionable production & interview decision rule"
       }}
     ]
   }},
   "exam_prep": {{
     "cheat_sheet_points": [
-      "Must-remember exam/revision fact #1",
-      "Must-remember exam/revision fact #2",
-      "Must-remember exam/revision fact #3",
-      "Must-remember exam/revision fact #4"
+      "High-yield revision rule #1",
+      "High-yield revision rule #2",
+      "High-yield revision rule #3",
+      "High-yield revision rule #4",
+      "High-yield revision rule #5"
     ],
     "common_exam_traps": [
-      "Common misconception or bug #1 and why it happens",
-      "Common misconception or bug #2 and why it happens"
+      "Common design/coding mistake #1 and how to avoid it",
+      "Common design/coding mistake #2 and how to avoid it",
+      "Common design/coding mistake #3 and how to avoid it"
     ],
     "exam_questions": [
       {{
-        "question": "Conceptual or code-output exam question #1?",
+        "question": "Challenging conceptual, design, or code-output question #1?",
         "difficulty": "Medium",
-        "model_answer": "Clear, complete 3-4 sentence answer explaining the exact reason and output."
+        "model_answer": "Complete 4-5 sentence full-credit answer explaining the exact mechanism, class design, or output."
       }},
       {{
-        "question": "Conceptual or code-output exam question #2?",
+        "question": "Challenging conceptual, design, or code-output question #2?",
         "difficulty": "Hard",
-        "model_answer": "Clear, complete 3-4 sentence answer explaining the exact reason and output."
+        "model_answer": "Complete 4-5 sentence full-credit answer explaining the exact mechanism, class design, or output."
       }},
       {{
-        "question": "Conceptual or code-output exam question #3?",
+        "question": "Challenging conceptual, design, or code-output question #3?",
         "difficulty": "Medium",
-        "model_answer": "Clear, complete 3-4 sentence answer explaining the exact reason and output."
+        "model_answer": "Complete 4-5 sentence full-credit answer explaining the exact mechanism, class design, or output."
+      }},
+      {{
+        "question": "Challenging conceptual, design, or code-output question #4?",
+        "difficulty": "Hard",
+        "model_answer": "Complete 4-5 sentence full-credit answer explaining the exact mechanism, class design, or output."
       }}
     ]
   }},
@@ -1442,41 +1449,63 @@ Return ONLY valid JSON matching this exact schema:
     "interview_questions": [
       {{
         "question": "High-probability technical interview question #1?",
-        "topic_tag": "Core Topic",
-        "elevator_pitch_30s": "Crisp 2-sentence 30-second answer.",
-        "deep_dive_answer": "2-3 sentences explaining the internal lifecycle/mechanism.",
-        "follow_up_tradeoffs": "1-2 sentences on design trade-offs and best practices."
+        "topic_tag": "Architecture & LLD",
+        "elevator_pitch_30s": "Crisp 2-3 sentence 30-second executive answer.",
+        "deep_dive_answer": "3-4 sentences explaining the under-the-hood lifecycle, class design, or algorithm.",
+        "follow_up_tradeoffs": "2 sentences on thread-safety, extensibility (Open/Closed Principle), and scaling trade-offs."
       }},
       {{
         "question": "High-probability technical interview question #2?",
-        "topic_tag": "Architecture",
-        "elevator_pitch_30s": "Crisp 2-sentence 30-second answer.",
-        "deep_dive_answer": "2-3 sentences explaining the internal lifecycle/mechanism.",
-        "follow_up_tradeoffs": "1-2 sentences on design trade-offs and best practices."
+        "topic_tag": "Design Patterns",
+        "elevator_pitch_30s": "Crisp 2-3 sentence 30-second executive answer.",
+        "deep_dive_answer": "3-4 sentences explaining the under-the-hood lifecycle, class design, or algorithm.",
+        "follow_up_tradeoffs": "2 sentences on thread-safety, extensibility, and scaling trade-offs."
       }},
       {{
         "question": "High-probability technical interview question #3?",
-        "topic_tag": "Edge Cases",
-        "elevator_pitch_30s": "Crisp 2-sentence 30-second answer.",
-        "deep_dive_answer": "2-3 sentences explaining the internal lifecycle/mechanism.",
-        "follow_up_tradeoffs": "1-2 sentences on design trade-offs and best practices."
+        "topic_tag": "Edge Cases & Concurrency",
+        "elevator_pitch_30s": "Crisp 2-3 sentence 30-second executive answer.",
+        "deep_dive_answer": "3-4 sentences explaining the under-the-hood lifecycle, class design, or algorithm.",
+        "follow_up_tradeoffs": "2 sentences on thread-safety, extensibility, and scaling trade-offs."
+      }},
+      {{
+        "question": "High-probability technical interview question #4?",
+        "topic_tag": "Machine Coding",
+        "elevator_pitch_30s": "Crisp 2-3 sentence 30-second executive answer.",
+        "deep_dive_answer": "3-4 sentences explaining the under-the-hood lifecycle, class design, or algorithm.",
+        "follow_up_tradeoffs": "2 sentences on thread-safety, extensibility, and scaling trade-offs."
       }}
     ],
     "flashcards": [
       {{
         "front": "Question 1?",
-        "back": "Concise answer 1.",
-        "tag": "Core"
+        "back": "Clear, specific technical answer 1.",
+        "tag": "Core Concept"
       }},
       {{
         "front": "Question 2?",
-        "back": "Concise answer 2.",
-        "tag": "Code"
+        "back": "Clear, specific technical answer 2.",
+        "tag": "Code & Syntax"
       }},
       {{
         "front": "Question 3?",
-        "back": "Concise answer 3.",
+        "back": "Clear, specific technical answer 3.",
+        "tag": "Architecture"
+      }},
+      {{
+        "front": "Question 4?",
+        "back": "Clear, specific technical answer 4.",
+        "tag": "Trade-Offs"
+      }},
+      {{
+        "front": "Question 5?",
+        "back": "Clear, specific technical answer 5.",
         "tag": "Interview"
+      }},
+      {{
+        "front": "Question 6?",
+        "back": "Clear, specific technical answer 6.",
+        "tag": "Exam Trap"
       }}
     ]
   }}

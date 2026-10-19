@@ -1786,7 +1786,7 @@
             `Loaded all ${totalVids} videos in the playlist (${payload.duration_stats.total_formatted})! Now generating deep AI study notes, code examples & Q&As for Lecture #1...`,
             "info"
           );
-          await summarizeSpecificVideoOnDemand(0, true);
+          await summarizeSpecificVideoOnDemand(0, false);
         } else if (payload.used_ai_model === false) {
           showStatusBanner(
             `Loaded ${totalVids} video(s) with extractive transcript notes. Status: ${payload.llm_status || 'No Gemini/Groq Key set'}. Click '✨ Deep AI Summarize Current Lecture' to retry!`,
@@ -1815,14 +1815,52 @@
     // -----------------------------------------------------------------------
     // On-Demand Per-Lecture & Batch AI Summarization (For 42+ Video Playlists)
     // -----------------------------------------------------------------------
+    function getCachedVideoSummary(videoId, studyGoal) {
+      try {
+        const raw = localStorage.getItem(`pulsetube_v8_${videoId}_${studyGoal}`);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        if (parsed && parsed.summary && parsed.summary.is_ai_generated) return parsed;
+      } catch (e) {}
+      return null;
+    }
+
+    function setCachedVideoSummary(videoId, studyGoal, videoObj) {
+      try {
+        if (videoObj && videoObj.summary && videoObj.summary.is_ai_generated) {
+          localStorage.setItem(`pulsetube_v8_${videoId}_${studyGoal}`, JSON.stringify(videoObj));
+        }
+      } catch (e) {}
+    }
+
     async function summarizeSpecificVideoOnDemand(idx, forceRegenerate = false) {
       if (!currentData) return;
       const videos = currentData.kind === "playlist" ? currentData.videos : [currentData.video];
       const targetVid = videos[idx];
       if (!targetVid) return;
 
-      if (!forceRegenerate && !targetVid.summary?.needs_deep_summary) {
-        return;
+      const studyGoal = document.getElementById("studyGoalSelect").value;
+      if (!forceRegenerate) {
+        if (!targetVid.summary?.needs_deep_summary && targetVid.summary?.is_ai_generated) {
+          return;
+        }
+        const cachedVid = getCachedVideoSummary(targetVid.video_id, studyGoal);
+        if (cachedVid) {
+          cachedVid.playlist_index = idx + 1;
+          if (currentData.kind === "playlist") currentData.videos[idx] = cachedVid;
+          else currentData.video = cachedVid;
+          const refreshed = currentData.kind === "playlist" ? currentData.videos : [currentData.video];
+          renderGlobalLectureSwitcher(refreshed);
+          renderVideoSelectorList(refreshed);
+          renderRollupSection(currentData, refreshed);
+          if (activeVideoIndex === idx) {
+            renderDeepLectureNotesTab(cachedVid, idx, refreshed.length);
+            renderExamRevisionTab(cachedVid);
+            renderInterviewPrepTab(cachedVid);
+            renderChapterCards(cachedVid, "");
+          }
+          return;
+        }
       }
 
       if (isSummarizingOnDemand) return;
@@ -1865,6 +1903,7 @@
         const updatedVideo = resData.video;
         updatedVideo.playlist_index = idx + 1;
         updatedVideo.summary.needs_deep_summary = false;
+        setCachedVideoSummary(updatedVideo.video_id, studyGoal, updatedVideo);
 
         if (currentData.kind === "playlist") {
           currentData.videos[idx] = updatedVideo;
@@ -1924,6 +1963,21 @@
       currentData = data;
       masteredFlashcards.clear();
       const isPlaylist = data.kind === "playlist";
+      const studyGoal = document.getElementById("studyGoalSelect").value;
+      if (isPlaylist && Array.isArray(data.videos)) {
+        data.videos = data.videos.map((v, i) => {
+          if (v.summary?.is_ai_generated) {
+            setCachedVideoSummary(v.video_id, studyGoal, v);
+            return v;
+          }
+          const cached = getCachedVideoSummary(v.video_id, studyGoal);
+          if (cached) {
+            cached.playlist_index = i + 1;
+            return cached;
+          }
+          return v;
+        });
+      }
       const videos = isPlaylist ? data.videos : [data.video];
       includedVideoFlags = videos.map(() => true);
       activeVideoIndex = 0;
@@ -2005,7 +2059,7 @@
 
       // If this video in a playlist hasn't been deeply summarized yet, auto-trigger `/api/summarize-video`!
       if (autoTriggerSummarize && vid.summary?.needs_deep_summary) {
-        summarizeSpecificVideoOnDemand(activeVideoIndex, true);
+        summarizeSpecificVideoOnDemand(activeVideoIndex, false);
       }
     }
 
